@@ -188,6 +188,8 @@ export interface EntEntity {
   asset_id: number;
   /** CreatedAt holds the value of the "created_at" field. */
   created_at: string;
+  /** CurrentMarketPrice holds the value of the "current_market_price" field. */
+  current_market_price: number;
   /** Description holds the value of the "description" field. */
   description: string;
   /**
@@ -201,6 +203,8 @@ export interface EntEntity {
   import_ref: string;
   /** Insured holds the value of the "insured" field. */
   insured: boolean;
+  /** LastPriceSyncAt holds the value of the "last_price_sync_at" field. */
+  last_price_sync_at: string;
   /** LifetimeWarranty holds the value of the "lifetime_warranty" field. */
   lifetime_warranty: boolean;
   /** Manufacturer holds the value of the "manufacturer" field. */
@@ -211,6 +215,12 @@ export interface EntEntity {
   name: string;
   /** Notes holds the value of the "notes" field. */
   notes: string;
+  /** PriceTrackingEnabled holds the value of the "price_tracking_enabled" field. */
+  price_tracking_enabled: boolean;
+  /** PriceTrackingID holds the value of the "price_tracking_id" field. */
+  price_tracking_id: string;
+  /** PriceTrackingSource holds the value of the "price_tracking_source" field. */
+  price_tracking_source: string;
   /** PurchaseDate holds the value of the "purchase_date" field. */
   purchase_date: Date | string;
   /** PurchaseFrom holds the value of the "purchase_from" field. */
@@ -254,6 +264,8 @@ export interface EntEntityEdges {
   maintenance_entries: EntMaintenanceEntry[];
   /** Parent holds the value of the parent edge. */
   parent: EntEntity;
+  /** PriceHistory holds the value of the price_history edge. */
+  price_history: EntEntityPriceHistory[];
   /** Tag holds the value of the tag edge. */
   tag: EntTag[];
 }
@@ -287,6 +299,45 @@ export interface EntEntityField {
 }
 
 export interface EntEntityFieldEdges {
+  /** Entity holds the value of the entity edge. */
+  entity: EntEntity;
+}
+
+export interface EntEntityPriceHistory {
+  /** CreatedAt holds the value of the "created_at" field. */
+  created_at: string;
+  /** DirectLow holds the value of the "direct_low" field. */
+  direct_low: number;
+  /**
+   * Edges holds the relations/edges for other nodes in the graph.
+   * The values are being populated by the EntityPriceHistoryQuery when eager-loading is set.
+   */
+  edges: EntEntityPriceHistoryEdges;
+  /** EntityID holds the value of the "entity_id" field. */
+  entity_id: string;
+  /** ID of the ent. */
+  id: string;
+  /** MarketHigh holds the value of the "market_high" field. */
+  market_high: number;
+  /** MarketLow holds the value of the "market_low" field. */
+  market_low: number;
+  /** MarketMid holds the value of the "market_mid" field. */
+  market_mid: number;
+  /** Notes holds the value of the "notes" field. */
+  notes: string;
+  /** Price holds the value of the "price" field. */
+  price: number;
+  /** RecordedAt holds the value of the "recorded_at" field. */
+  recorded_at: string;
+  /** Source holds the value of the "source" field. */
+  source: string;
+  /** SourceID holds the value of the "source_id" field. */
+  source_id: string;
+  /** UpdatedAt holds the value of the "updated_at" field. */
+  updated_at: string;
+}
+
+export interface EntEntityPriceHistoryEdges {
   /** Entity holds the value of the entity edge. */
   entity: EntEntity;
 }
@@ -693,6 +744,17 @@ export interface EntUserGroupEdges {
   user: EntUser;
 }
 
+export interface PricingProductSearchResult {
+  cleanName: string;
+  groupId: number;
+  groupName: string;
+  imageUrl: string;
+  marketPrice: number;
+  name: string;
+  productId: number;
+  url: string;
+}
+
 export interface APIKeyCreate {
   expiresAt?: string | null;
   /**
@@ -789,6 +851,8 @@ export interface EntityOut {
   /** Container-specific fields (for entities whose entity_type.is_location = true) */
   children: EntitySummary[];
   createdAt: Date | string;
+  /** Price Tracking */
+  currentMarketPrice: number;
   description: string;
   entityType?: EntityTypeSummary | null;
   fields: EntityFieldData[];
@@ -797,6 +861,7 @@ export interface EntityOut {
   insured: boolean;
   /** Container-specific (populated when querying locations) */
   itemCount: number;
+  lastPriceSyncAt?: string | null;
   /** Warranty */
   lifetimeWarranty: boolean;
   /**
@@ -813,6 +878,9 @@ export interface EntityOut {
   notes: string;
   /** Edges */
   parent?: EntitySummary | null;
+  priceTrackingEnabled: boolean;
+  priceTrackingId: string;
+  priceTrackingSource: string;
   /** Purchase */
   purchaseDate: Date | string;
   purchaseFrom: string;
@@ -852,6 +920,8 @@ export interface EntitySummary {
   /** @example "0" */
   assetId: string;
   createdAt: Date | string;
+  /** Price Tracking */
+  currentMarketPrice: number;
   description: string;
   entityType?: EntityTypeSummary | null;
   id: string;
@@ -862,6 +932,7 @@ export interface EntitySummary {
   name: string;
   /** Edges */
   parent?: EntitySummary | null;
+  priceTrackingEnabled: boolean;
   purchasePrice: number;
   quantity: number;
   /** Sale details */
@@ -1007,6 +1078,7 @@ export interface EntityTypeUpdate {
 export interface EntityUpdate {
   archived: boolean;
   assetId: string;
+  currentMarketPrice: number;
   /** @maxLength 1000 */
   description: string;
   entityTypeId: string;
@@ -1025,6 +1097,10 @@ export interface EntityUpdate {
   /** Extras */
   notes: string;
   parentId?: string | null;
+  /** Price Tracking */
+  priceTrackingEnabled: boolean;
+  priceTrackingId: string;
+  priceTrackingSource: string;
   /** Purchase */
   purchaseDate: Date | string;
   /** @maxLength 255 */
@@ -1187,6 +1263,33 @@ export interface PaginationResultEntitySummary {
   page: number;
   pageSize: number;
   total: number;
+}
+
+export interface PriceHistoryCreate {
+  directLow: number;
+  marketHigh: number;
+  marketLow: number;
+  marketMid: number;
+  notes: string;
+  price: number;
+  recordedAt: string;
+  source: string;
+  sourceId: string;
+}
+
+export interface PriceHistoryEntry {
+  createdAt: Date | string;
+  directLow: number;
+  entityId: string;
+  id: string;
+  marketHigh: number;
+  marketLow: number;
+  marketMid: number;
+  notes: string;
+  price: number;
+  recordedAt: string;
+  source: string;
+  sourceId: string;
 }
 
 export interface TagCreate {

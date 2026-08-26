@@ -45,6 +45,7 @@
   import DetailsSection from "~/components/global/DetailsSection/DetailsSection.vue";
   import ItemAttachmentsList from "~/components/Item/AttachmentsList.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
+  import ItemValuationCard from "~/components/Item/ValuationCard.vue";
 
   const { t } = useI18n();
 
@@ -845,6 +846,8 @@
               <p class="px-6 pb-4 text-foreground/70">{{ $t("items.no_attachments") }}</p>
             </div>
           </BaseCard>
+
+          <ItemValuationCard :item="item" @refresh="refresh" />
 
           <BaseCard v-if="showPurchase" collapsable>
             <template #title> {{ $t("items.purchase_details") }} </template>

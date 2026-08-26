@@ -14,6 +14,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/attachment"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entityfield"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitypricehistory"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/group"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/maintenanceentry"
@@ -355,6 +356,76 @@ func (_c *EntityCreate) SetNillableSoldNotes(v *string) *EntityCreate {
 	return _c
 }
 
+// SetCurrentMarketPrice sets the "current_market_price" field.
+func (_c *EntityCreate) SetCurrentMarketPrice(v float64) *EntityCreate {
+	_c.mutation.SetCurrentMarketPrice(v)
+	return _c
+}
+
+// SetNillableCurrentMarketPrice sets the "current_market_price" field if the given value is not nil.
+func (_c *EntityCreate) SetNillableCurrentMarketPrice(v *float64) *EntityCreate {
+	if v != nil {
+		_c.SetCurrentMarketPrice(*v)
+	}
+	return _c
+}
+
+// SetLastPriceSyncAt sets the "last_price_sync_at" field.
+func (_c *EntityCreate) SetLastPriceSyncAt(v time.Time) *EntityCreate {
+	_c.mutation.SetLastPriceSyncAt(v)
+	return _c
+}
+
+// SetNillableLastPriceSyncAt sets the "last_price_sync_at" field if the given value is not nil.
+func (_c *EntityCreate) SetNillableLastPriceSyncAt(v *time.Time) *EntityCreate {
+	if v != nil {
+		_c.SetLastPriceSyncAt(*v)
+	}
+	return _c
+}
+
+// SetPriceTrackingEnabled sets the "price_tracking_enabled" field.
+func (_c *EntityCreate) SetPriceTrackingEnabled(v bool) *EntityCreate {
+	_c.mutation.SetPriceTrackingEnabled(v)
+	return _c
+}
+
+// SetNillablePriceTrackingEnabled sets the "price_tracking_enabled" field if the given value is not nil.
+func (_c *EntityCreate) SetNillablePriceTrackingEnabled(v *bool) *EntityCreate {
+	if v != nil {
+		_c.SetPriceTrackingEnabled(*v)
+	}
+	return _c
+}
+
+// SetPriceTrackingSource sets the "price_tracking_source" field.
+func (_c *EntityCreate) SetPriceTrackingSource(v string) *EntityCreate {
+	_c.mutation.SetPriceTrackingSource(v)
+	return _c
+}
+
+// SetNillablePriceTrackingSource sets the "price_tracking_source" field if the given value is not nil.
+func (_c *EntityCreate) SetNillablePriceTrackingSource(v *string) *EntityCreate {
+	if v != nil {
+		_c.SetPriceTrackingSource(*v)
+	}
+	return _c
+}
+
+// SetPriceTrackingID sets the "price_tracking_id" field.
+func (_c *EntityCreate) SetPriceTrackingID(v string) *EntityCreate {
+	_c.mutation.SetPriceTrackingID(v)
+	return _c
+}
+
+// SetNillablePriceTrackingID sets the "price_tracking_id" field if the given value is not nil.
+func (_c *EntityCreate) SetNillablePriceTrackingID(v *string) *EntityCreate {
+	if v != nil {
+		_c.SetPriceTrackingID(*v)
+	}
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *EntityCreate) SetID(v uuid.UUID) *EntityCreate {
 	_c.mutation.SetID(v)
@@ -485,6 +556,21 @@ func (_c *EntityCreate) AddAttachments(v ...*Attachment) *EntityCreate {
 	return _c.AddAttachmentIDs(ids...)
 }
 
+// AddPriceHistoryIDs adds the "price_history" edge to the EntityPriceHistory entity by IDs.
+func (_c *EntityCreate) AddPriceHistoryIDs(ids ...uuid.UUID) *EntityCreate {
+	_c.mutation.AddPriceHistoryIDs(ids...)
+	return _c
+}
+
+// AddPriceHistory adds the "price_history" edges to the EntityPriceHistory entity.
+func (_c *EntityCreate) AddPriceHistory(v ...*EntityPriceHistory) *EntityCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPriceHistoryIDs(ids...)
+}
+
 // Mutation returns the EntityMutation object of the builder.
 func (_c *EntityCreate) Mutation() *EntityMutation {
 	return _c.mutation
@@ -559,6 +645,18 @@ func (_c *EntityCreate) defaults() {
 	if _, ok := _c.mutation.SoldPrice(); !ok {
 		v := entity.DefaultSoldPrice
 		_c.mutation.SetSoldPrice(v)
+	}
+	if _, ok := _c.mutation.CurrentMarketPrice(); !ok {
+		v := entity.DefaultCurrentMarketPrice
+		_c.mutation.SetCurrentMarketPrice(v)
+	}
+	if _, ok := _c.mutation.PriceTrackingEnabled(); !ok {
+		v := entity.DefaultPriceTrackingEnabled
+		_c.mutation.SetPriceTrackingEnabled(v)
+	}
+	if _, ok := _c.mutation.PriceTrackingSource(); !ok {
+		v := entity.DefaultPriceTrackingSource
+		_c.mutation.SetPriceTrackingSource(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
 		v := entity.DefaultID()
@@ -644,6 +742,22 @@ func (_c *EntityCreate) check() error {
 	if v, ok := _c.mutation.SoldNotes(); ok {
 		if err := entity.SoldNotesValidator(v); err != nil {
 			return &ValidationError{Name: "sold_notes", err: fmt.Errorf(`ent: validator failed for field "Entity.sold_notes": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.CurrentMarketPrice(); !ok {
+		return &ValidationError{Name: "current_market_price", err: errors.New(`ent: missing required field "Entity.current_market_price"`)}
+	}
+	if _, ok := _c.mutation.PriceTrackingEnabled(); !ok {
+		return &ValidationError{Name: "price_tracking_enabled", err: errors.New(`ent: missing required field "Entity.price_tracking_enabled"`)}
+	}
+	if v, ok := _c.mutation.PriceTrackingSource(); ok {
+		if err := entity.PriceTrackingSourceValidator(v); err != nil {
+			return &ValidationError{Name: "price_tracking_source", err: fmt.Errorf(`ent: validator failed for field "Entity.price_tracking_source": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.PriceTrackingID(); ok {
+		if err := entity.PriceTrackingIDValidator(v); err != nil {
+			return &ValidationError{Name: "price_tracking_id", err: fmt.Errorf(`ent: validator failed for field "Entity.price_tracking_id": %w`, err)}
 		}
 	}
 	if len(_c.mutation.GroupIDs()) == 0 {
@@ -783,6 +897,26 @@ func (_c *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 		_spec.SetField(entity.FieldSoldNotes, field.TypeString, value)
 		_node.SoldNotes = value
 	}
+	if value, ok := _c.mutation.CurrentMarketPrice(); ok {
+		_spec.SetField(entity.FieldCurrentMarketPrice, field.TypeFloat64, value)
+		_node.CurrentMarketPrice = value
+	}
+	if value, ok := _c.mutation.LastPriceSyncAt(); ok {
+		_spec.SetField(entity.FieldLastPriceSyncAt, field.TypeTime, value)
+		_node.LastPriceSyncAt = value
+	}
+	if value, ok := _c.mutation.PriceTrackingEnabled(); ok {
+		_spec.SetField(entity.FieldPriceTrackingEnabled, field.TypeBool, value)
+		_node.PriceTrackingEnabled = value
+	}
+	if value, ok := _c.mutation.PriceTrackingSource(); ok {
+		_spec.SetField(entity.FieldPriceTrackingSource, field.TypeString, value)
+		_node.PriceTrackingSource = value
+	}
+	if value, ok := _c.mutation.PriceTrackingID(); ok {
+		_spec.SetField(entity.FieldPriceTrackingID, field.TypeString, value)
+		_node.PriceTrackingID = value
+	}
 	if nodes := _c.mutation.GroupIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -907,6 +1041,22 @@ func (_c *EntityCreate) createSpec() (*Entity, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(attachment.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PriceHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.PriceHistoryTable,
+			Columns: []string{entity.PriceHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(entitypricehistory.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

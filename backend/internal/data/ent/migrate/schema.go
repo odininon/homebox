@@ -156,6 +156,11 @@ var (
 		{Name: "sold_to", Type: field.TypeString, Nullable: true},
 		{Name: "sold_price", Type: field.TypeFloat64, Default: 0},
 		{Name: "sold_notes", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "current_market_price", Type: field.TypeFloat64, Default: 0},
+		{Name: "last_price_sync_at", Type: field.TypeTime, Nullable: true},
+		{Name: "price_tracking_enabled", Type: field.TypeBool, Default: false},
+		{Name: "price_tracking_source", Type: field.TypeString, Nullable: true, Size: 100, Default: "tcgplayer"},
+		{Name: "price_tracking_id", Type: field.TypeString, Nullable: true, Size: 100},
 		{Name: "entity_children", Type: field.TypeUUID, Nullable: true},
 		{Name: "entity_type_entities", Type: field.TypeUUID},
 		{Name: "group_entities", Type: field.TypeUUID},
@@ -168,19 +173,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "entities_entities_children",
-				Columns:    []*schema.Column{EntitiesColumns[25]},
+				Columns:    []*schema.Column{EntitiesColumns[30]},
 				RefColumns: []*schema.Column{EntitiesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "entities_entity_types_entities",
-				Columns:    []*schema.Column{EntitiesColumns[26]},
+				Columns:    []*schema.Column{EntitiesColumns[31]},
 				RefColumns: []*schema.Column{EntityTypesColumns[0]},
 				OnDelete:   schema.Restrict,
 			},
 			{
 				Symbol:     "entities_groups_entities",
-				Columns:    []*schema.Column{EntitiesColumns[27]},
+				Columns:    []*schema.Column{EntitiesColumns[32]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -243,6 +248,53 @@ var (
 				Columns:    []*schema.Column{EntityFieldsColumns[10]},
 				RefColumns: []*schema.Column{EntitiesColumns[0]},
 				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// EntityPriceHistoriesColumns holds the columns for the "entity_price_histories" table.
+	EntityPriceHistoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "price", Type: field.TypeFloat64, Default: 0},
+		{Name: "market_low", Type: field.TypeFloat64, Nullable: true, Default: 0},
+		{Name: "market_mid", Type: field.TypeFloat64, Nullable: true, Default: 0},
+		{Name: "market_high", Type: field.TypeFloat64, Nullable: true, Default: 0},
+		{Name: "direct_low", Type: field.TypeFloat64, Nullable: true, Default: 0},
+		{Name: "source", Type: field.TypeString, Size: 100, Default: "tcgplayer"},
+		{Name: "source_id", Type: field.TypeString, Nullable: true, Size: 100},
+		{Name: "recorded_at", Type: field.TypeTime},
+		{Name: "notes", Type: field.TypeString, Nullable: true, Size: 500},
+		{Name: "entity_id", Type: field.TypeUUID},
+	}
+	// EntityPriceHistoriesTable holds the schema information for the "entity_price_histories" table.
+	EntityPriceHistoriesTable = &schema.Table{
+		Name:       "entity_price_histories",
+		Columns:    EntityPriceHistoriesColumns,
+		PrimaryKey: []*schema.Column{EntityPriceHistoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "entity_price_histories_entities_price_history",
+				Columns:    []*schema.Column{EntityPriceHistoriesColumns[12]},
+				RefColumns: []*schema.Column{EntitiesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "entitypricehistory_recorded_at",
+				Unique:  false,
+				Columns: []*schema.Column{EntityPriceHistoriesColumns[10]},
+			},
+			{
+				Name:    "entitypricehistory_source",
+				Unique:  false,
+				Columns: []*schema.Column{EntityPriceHistoriesColumns[8]},
+			},
+			{
+				Name:    "entitypricehistory_entity_id_recorded_at",
+				Unique:  false,
+				Columns: []*schema.Column{EntityPriceHistoriesColumns[12], EntityPriceHistoriesColumns[10]},
 			},
 		},
 	}
@@ -663,6 +715,7 @@ var (
 		AuthTokensTable,
 		EntitiesTable,
 		EntityFieldsTable,
+		EntityPriceHistoriesTable,
 		EntityTemplatesTable,
 		EntityTypesTable,
 		ExportsTable,
@@ -689,6 +742,7 @@ func init() {
 	EntitiesTable.ForeignKeys[1].RefTable = EntityTypesTable
 	EntitiesTable.ForeignKeys[2].RefTable = GroupsTable
 	EntityFieldsTable.ForeignKeys[0].RefTable = EntitiesTable
+	EntityPriceHistoriesTable.ForeignKeys[0].RefTable = EntitiesTable
 	EntityTemplatesTable.ForeignKeys[0].RefTable = EntitiesTable
 	EntityTemplatesTable.ForeignKeys[1].RefTable = GroupsTable
 	EntityTypesTable.ForeignKeys[0].RefTable = EntityTemplatesTable

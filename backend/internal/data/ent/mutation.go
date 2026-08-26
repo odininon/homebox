@@ -18,6 +18,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/authtokens"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entityfield"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitypricehistory"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/export"
@@ -48,6 +49,7 @@ const (
 	TypeAuthTokens           = "AuthTokens"
 	TypeEntity               = "Entity"
 	TypeEntityField          = "EntityField"
+	TypeEntityPriceHistory   = "EntityPriceHistory"
 	TypeEntityTemplate       = "EntityTemplate"
 	TypeEntityType           = "EntityType"
 	TypeExport               = "Export"
@@ -2642,6 +2644,12 @@ type EntityMutation struct {
 	sold_price                  *float64
 	addsold_price               *float64
 	sold_notes                  *string
+	current_market_price        *float64
+	addcurrent_market_price     *float64
+	last_price_sync_at          *time.Time
+	price_tracking_enabled      *bool
+	price_tracking_source       *string
+	price_tracking_id           *string
 	clearedFields               map[string]struct{}
 	group                       *uuid.UUID
 	clearedgroup                bool
@@ -2664,6 +2672,9 @@ type EntityMutation struct {
 	attachments                 map[uuid.UUID]struct{}
 	removedattachments          map[uuid.UUID]struct{}
 	clearedattachments          bool
+	price_history               map[uuid.UUID]struct{}
+	removedprice_history        map[uuid.UUID]struct{}
+	clearedprice_history        bool
 	done                        bool
 	oldValue                    func(context.Context) (*Entity, error)
 	predicates                  []predicate.Entity
@@ -3886,6 +3897,245 @@ func (m *EntityMutation) ResetSoldNotes() {
 	delete(m.clearedFields, entity.FieldSoldNotes)
 }
 
+// SetCurrentMarketPrice sets the "current_market_price" field.
+func (m *EntityMutation) SetCurrentMarketPrice(f float64) {
+	m.current_market_price = &f
+	m.addcurrent_market_price = nil
+}
+
+// CurrentMarketPrice returns the value of the "current_market_price" field in the mutation.
+func (m *EntityMutation) CurrentMarketPrice() (r float64, exists bool) {
+	v := m.current_market_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrentMarketPrice returns the old "current_market_price" field's value of the Entity entity.
+// If the Entity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityMutation) OldCurrentMarketPrice(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrentMarketPrice is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrentMarketPrice requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrentMarketPrice: %w", err)
+	}
+	return oldValue.CurrentMarketPrice, nil
+}
+
+// AddCurrentMarketPrice adds f to the "current_market_price" field.
+func (m *EntityMutation) AddCurrentMarketPrice(f float64) {
+	if m.addcurrent_market_price != nil {
+		*m.addcurrent_market_price += f
+	} else {
+		m.addcurrent_market_price = &f
+	}
+}
+
+// AddedCurrentMarketPrice returns the value that was added to the "current_market_price" field in this mutation.
+func (m *EntityMutation) AddedCurrentMarketPrice() (r float64, exists bool) {
+	v := m.addcurrent_market_price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCurrentMarketPrice resets all changes to the "current_market_price" field.
+func (m *EntityMutation) ResetCurrentMarketPrice() {
+	m.current_market_price = nil
+	m.addcurrent_market_price = nil
+}
+
+// SetLastPriceSyncAt sets the "last_price_sync_at" field.
+func (m *EntityMutation) SetLastPriceSyncAt(t time.Time) {
+	m.last_price_sync_at = &t
+}
+
+// LastPriceSyncAt returns the value of the "last_price_sync_at" field in the mutation.
+func (m *EntityMutation) LastPriceSyncAt() (r time.Time, exists bool) {
+	v := m.last_price_sync_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastPriceSyncAt returns the old "last_price_sync_at" field's value of the Entity entity.
+// If the Entity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityMutation) OldLastPriceSyncAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastPriceSyncAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastPriceSyncAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastPriceSyncAt: %w", err)
+	}
+	return oldValue.LastPriceSyncAt, nil
+}
+
+// ClearLastPriceSyncAt clears the value of the "last_price_sync_at" field.
+func (m *EntityMutation) ClearLastPriceSyncAt() {
+	m.last_price_sync_at = nil
+	m.clearedFields[entity.FieldLastPriceSyncAt] = struct{}{}
+}
+
+// LastPriceSyncAtCleared returns if the "last_price_sync_at" field was cleared in this mutation.
+func (m *EntityMutation) LastPriceSyncAtCleared() bool {
+	_, ok := m.clearedFields[entity.FieldLastPriceSyncAt]
+	return ok
+}
+
+// ResetLastPriceSyncAt resets all changes to the "last_price_sync_at" field.
+func (m *EntityMutation) ResetLastPriceSyncAt() {
+	m.last_price_sync_at = nil
+	delete(m.clearedFields, entity.FieldLastPriceSyncAt)
+}
+
+// SetPriceTrackingEnabled sets the "price_tracking_enabled" field.
+func (m *EntityMutation) SetPriceTrackingEnabled(b bool) {
+	m.price_tracking_enabled = &b
+}
+
+// PriceTrackingEnabled returns the value of the "price_tracking_enabled" field in the mutation.
+func (m *EntityMutation) PriceTrackingEnabled() (r bool, exists bool) {
+	v := m.price_tracking_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriceTrackingEnabled returns the old "price_tracking_enabled" field's value of the Entity entity.
+// If the Entity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityMutation) OldPriceTrackingEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPriceTrackingEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPriceTrackingEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriceTrackingEnabled: %w", err)
+	}
+	return oldValue.PriceTrackingEnabled, nil
+}
+
+// ResetPriceTrackingEnabled resets all changes to the "price_tracking_enabled" field.
+func (m *EntityMutation) ResetPriceTrackingEnabled() {
+	m.price_tracking_enabled = nil
+}
+
+// SetPriceTrackingSource sets the "price_tracking_source" field.
+func (m *EntityMutation) SetPriceTrackingSource(s string) {
+	m.price_tracking_source = &s
+}
+
+// PriceTrackingSource returns the value of the "price_tracking_source" field in the mutation.
+func (m *EntityMutation) PriceTrackingSource() (r string, exists bool) {
+	v := m.price_tracking_source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriceTrackingSource returns the old "price_tracking_source" field's value of the Entity entity.
+// If the Entity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityMutation) OldPriceTrackingSource(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPriceTrackingSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPriceTrackingSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriceTrackingSource: %w", err)
+	}
+	return oldValue.PriceTrackingSource, nil
+}
+
+// ClearPriceTrackingSource clears the value of the "price_tracking_source" field.
+func (m *EntityMutation) ClearPriceTrackingSource() {
+	m.price_tracking_source = nil
+	m.clearedFields[entity.FieldPriceTrackingSource] = struct{}{}
+}
+
+// PriceTrackingSourceCleared returns if the "price_tracking_source" field was cleared in this mutation.
+func (m *EntityMutation) PriceTrackingSourceCleared() bool {
+	_, ok := m.clearedFields[entity.FieldPriceTrackingSource]
+	return ok
+}
+
+// ResetPriceTrackingSource resets all changes to the "price_tracking_source" field.
+func (m *EntityMutation) ResetPriceTrackingSource() {
+	m.price_tracking_source = nil
+	delete(m.clearedFields, entity.FieldPriceTrackingSource)
+}
+
+// SetPriceTrackingID sets the "price_tracking_id" field.
+func (m *EntityMutation) SetPriceTrackingID(s string) {
+	m.price_tracking_id = &s
+}
+
+// PriceTrackingID returns the value of the "price_tracking_id" field in the mutation.
+func (m *EntityMutation) PriceTrackingID() (r string, exists bool) {
+	v := m.price_tracking_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPriceTrackingID returns the old "price_tracking_id" field's value of the Entity entity.
+// If the Entity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityMutation) OldPriceTrackingID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPriceTrackingID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPriceTrackingID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPriceTrackingID: %w", err)
+	}
+	return oldValue.PriceTrackingID, nil
+}
+
+// ClearPriceTrackingID clears the value of the "price_tracking_id" field.
+func (m *EntityMutation) ClearPriceTrackingID() {
+	m.price_tracking_id = nil
+	m.clearedFields[entity.FieldPriceTrackingID] = struct{}{}
+}
+
+// PriceTrackingIDCleared returns if the "price_tracking_id" field was cleared in this mutation.
+func (m *EntityMutation) PriceTrackingIDCleared() bool {
+	_, ok := m.clearedFields[entity.FieldPriceTrackingID]
+	return ok
+}
+
+// ResetPriceTrackingID resets all changes to the "price_tracking_id" field.
+func (m *EntityMutation) ResetPriceTrackingID() {
+	m.price_tracking_id = nil
+	delete(m.clearedFields, entity.FieldPriceTrackingID)
+}
+
 // SetGroupID sets the "group" edge to the Group entity by id.
 func (m *EntityMutation) SetGroupID(id uuid.UUID) {
 	m.group = &id
@@ -4273,6 +4523,60 @@ func (m *EntityMutation) ResetAttachments() {
 	m.removedattachments = nil
 }
 
+// AddPriceHistoryIDs adds the "price_history" edge to the EntityPriceHistory entity by ids.
+func (m *EntityMutation) AddPriceHistoryIDs(ids ...uuid.UUID) {
+	if m.price_history == nil {
+		m.price_history = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.price_history[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPriceHistory clears the "price_history" edge to the EntityPriceHistory entity.
+func (m *EntityMutation) ClearPriceHistory() {
+	m.clearedprice_history = true
+}
+
+// PriceHistoryCleared reports if the "price_history" edge to the EntityPriceHistory entity was cleared.
+func (m *EntityMutation) PriceHistoryCleared() bool {
+	return m.clearedprice_history
+}
+
+// RemovePriceHistoryIDs removes the "price_history" edge to the EntityPriceHistory entity by IDs.
+func (m *EntityMutation) RemovePriceHistoryIDs(ids ...uuid.UUID) {
+	if m.removedprice_history == nil {
+		m.removedprice_history = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.price_history, ids[i])
+		m.removedprice_history[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPriceHistory returns the removed IDs of the "price_history" edge to the EntityPriceHistory entity.
+func (m *EntityMutation) RemovedPriceHistoryIDs() (ids []uuid.UUID) {
+	for id := range m.removedprice_history {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PriceHistoryIDs returns the "price_history" edge IDs in the mutation.
+func (m *EntityMutation) PriceHistoryIDs() (ids []uuid.UUID) {
+	for id := range m.price_history {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPriceHistory resets all changes to the "price_history" edge.
+func (m *EntityMutation) ResetPriceHistory() {
+	m.price_history = nil
+	m.clearedprice_history = false
+	m.removedprice_history = nil
+}
+
 // Where appends a list predicates to the EntityMutation builder.
 func (m *EntityMutation) Where(ps ...predicate.Entity) {
 	m.predicates = append(m.predicates, ps...)
@@ -4307,7 +4611,7 @@ func (m *EntityMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *EntityMutation) Fields() []string {
-	fields := make([]string, 0, 24)
+	fields := make([]string, 0, 29)
 	if m.created_at != nil {
 		fields = append(fields, entity.FieldCreatedAt)
 	}
@@ -4380,6 +4684,21 @@ func (m *EntityMutation) Fields() []string {
 	if m.sold_notes != nil {
 		fields = append(fields, entity.FieldSoldNotes)
 	}
+	if m.current_market_price != nil {
+		fields = append(fields, entity.FieldCurrentMarketPrice)
+	}
+	if m.last_price_sync_at != nil {
+		fields = append(fields, entity.FieldLastPriceSyncAt)
+	}
+	if m.price_tracking_enabled != nil {
+		fields = append(fields, entity.FieldPriceTrackingEnabled)
+	}
+	if m.price_tracking_source != nil {
+		fields = append(fields, entity.FieldPriceTrackingSource)
+	}
+	if m.price_tracking_id != nil {
+		fields = append(fields, entity.FieldPriceTrackingID)
+	}
 	return fields
 }
 
@@ -4436,6 +4755,16 @@ func (m *EntityMutation) Field(name string) (ent.Value, bool) {
 		return m.SoldPrice()
 	case entity.FieldSoldNotes:
 		return m.SoldNotes()
+	case entity.FieldCurrentMarketPrice:
+		return m.CurrentMarketPrice()
+	case entity.FieldLastPriceSyncAt:
+		return m.LastPriceSyncAt()
+	case entity.FieldPriceTrackingEnabled:
+		return m.PriceTrackingEnabled()
+	case entity.FieldPriceTrackingSource:
+		return m.PriceTrackingSource()
+	case entity.FieldPriceTrackingID:
+		return m.PriceTrackingID()
 	}
 	return nil, false
 }
@@ -4493,6 +4822,16 @@ func (m *EntityMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldSoldPrice(ctx)
 	case entity.FieldSoldNotes:
 		return m.OldSoldNotes(ctx)
+	case entity.FieldCurrentMarketPrice:
+		return m.OldCurrentMarketPrice(ctx)
+	case entity.FieldLastPriceSyncAt:
+		return m.OldLastPriceSyncAt(ctx)
+	case entity.FieldPriceTrackingEnabled:
+		return m.OldPriceTrackingEnabled(ctx)
+	case entity.FieldPriceTrackingSource:
+		return m.OldPriceTrackingSource(ctx)
+	case entity.FieldPriceTrackingID:
+		return m.OldPriceTrackingID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Entity field %s", name)
 }
@@ -4670,6 +5009,41 @@ func (m *EntityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSoldNotes(v)
 		return nil
+	case entity.FieldCurrentMarketPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrentMarketPrice(v)
+		return nil
+	case entity.FieldLastPriceSyncAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastPriceSyncAt(v)
+		return nil
+	case entity.FieldPriceTrackingEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriceTrackingEnabled(v)
+		return nil
+	case entity.FieldPriceTrackingSource:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriceTrackingSource(v)
+		return nil
+	case entity.FieldPriceTrackingID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPriceTrackingID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Entity field %s", name)
 }
@@ -4690,6 +5064,9 @@ func (m *EntityMutation) AddedFields() []string {
 	if m.addsold_price != nil {
 		fields = append(fields, entity.FieldSoldPrice)
 	}
+	if m.addcurrent_market_price != nil {
+		fields = append(fields, entity.FieldCurrentMarketPrice)
+	}
 	return fields
 }
 
@@ -4706,6 +5083,8 @@ func (m *EntityMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedPurchasePrice()
 	case entity.FieldSoldPrice:
 		return m.AddedSoldPrice()
+	case entity.FieldCurrentMarketPrice:
+		return m.AddedCurrentMarketPrice()
 	}
 	return nil, false
 }
@@ -4742,6 +5121,13 @@ func (m *EntityMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddSoldPrice(v)
+		return nil
+	case entity.FieldCurrentMarketPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCurrentMarketPrice(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Entity numeric field %s", name)
@@ -4789,6 +5175,15 @@ func (m *EntityMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(entity.FieldSoldNotes) {
 		fields = append(fields, entity.FieldSoldNotes)
+	}
+	if m.FieldCleared(entity.FieldLastPriceSyncAt) {
+		fields = append(fields, entity.FieldLastPriceSyncAt)
+	}
+	if m.FieldCleared(entity.FieldPriceTrackingSource) {
+		fields = append(fields, entity.FieldPriceTrackingSource)
+	}
+	if m.FieldCleared(entity.FieldPriceTrackingID) {
+		fields = append(fields, entity.FieldPriceTrackingID)
 	}
 	return fields
 }
@@ -4842,6 +5237,15 @@ func (m *EntityMutation) ClearField(name string) error {
 		return nil
 	case entity.FieldSoldNotes:
 		m.ClearSoldNotes()
+		return nil
+	case entity.FieldLastPriceSyncAt:
+		m.ClearLastPriceSyncAt()
+		return nil
+	case entity.FieldPriceTrackingSource:
+		m.ClearPriceTrackingSource()
+		return nil
+	case entity.FieldPriceTrackingID:
+		m.ClearPriceTrackingID()
 		return nil
 	}
 	return fmt.Errorf("unknown Entity nullable field %s", name)
@@ -4923,13 +5327,28 @@ func (m *EntityMutation) ResetField(name string) error {
 	case entity.FieldSoldNotes:
 		m.ResetSoldNotes()
 		return nil
+	case entity.FieldCurrentMarketPrice:
+		m.ResetCurrentMarketPrice()
+		return nil
+	case entity.FieldLastPriceSyncAt:
+		m.ResetLastPriceSyncAt()
+		return nil
+	case entity.FieldPriceTrackingEnabled:
+		m.ResetPriceTrackingEnabled()
+		return nil
+	case entity.FieldPriceTrackingSource:
+		m.ResetPriceTrackingSource()
+		return nil
+	case entity.FieldPriceTrackingID:
+		m.ResetPriceTrackingID()
+		return nil
 	}
 	return fmt.Errorf("unknown Entity field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *EntityMutation) AddedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.group != nil {
 		edges = append(edges, entity.EdgeGroup)
 	}
@@ -4953,6 +5372,9 @@ func (m *EntityMutation) AddedEdges() []string {
 	}
 	if m.attachments != nil {
 		edges = append(edges, entity.EdgeAttachments)
+	}
+	if m.price_history != nil {
+		edges = append(edges, entity.EdgePriceHistory)
 	}
 	return edges
 }
@@ -5003,13 +5425,19 @@ func (m *EntityMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case entity.EdgePriceHistory:
+		ids := make([]ent.Value, 0, len(m.price_history))
+		for id := range m.price_history {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *EntityMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.removedchildren != nil {
 		edges = append(edges, entity.EdgeChildren)
 	}
@@ -5024,6 +5452,9 @@ func (m *EntityMutation) RemovedEdges() []string {
 	}
 	if m.removedattachments != nil {
 		edges = append(edges, entity.EdgeAttachments)
+	}
+	if m.removedprice_history != nil {
+		edges = append(edges, entity.EdgePriceHistory)
 	}
 	return edges
 }
@@ -5062,13 +5493,19 @@ func (m *EntityMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case entity.EdgePriceHistory:
+		ids := make([]ent.Value, 0, len(m.removedprice_history))
+		for id := range m.removedprice_history {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *EntityMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.clearedgroup {
 		edges = append(edges, entity.EdgeGroup)
 	}
@@ -5093,6 +5530,9 @@ func (m *EntityMutation) ClearedEdges() []string {
 	if m.clearedattachments {
 		edges = append(edges, entity.EdgeAttachments)
 	}
+	if m.clearedprice_history {
+		edges = append(edges, entity.EdgePriceHistory)
+	}
 	return edges
 }
 
@@ -5116,6 +5556,8 @@ func (m *EntityMutation) EdgeCleared(name string) bool {
 		return m.clearedmaintenance_entries
 	case entity.EdgeAttachments:
 		return m.clearedattachments
+	case entity.EdgePriceHistory:
+		return m.clearedprice_history
 	}
 	return false
 }
@@ -5164,6 +5606,9 @@ func (m *EntityMutation) ResetEdge(name string) error {
 		return nil
 	case entity.EdgeAttachments:
 		m.ResetAttachments()
+		return nil
+	case entity.EdgePriceHistory:
+		m.ResetPriceHistory()
 		return nil
 	}
 	return fmt.Errorf("unknown Entity edge %s", name)
@@ -6095,6 +6540,1275 @@ func (m *EntityFieldMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown EntityField edge %s", name)
+}
+
+// EntityPriceHistoryMutation represents an operation that mutates the EntityPriceHistory nodes in the graph.
+type EntityPriceHistoryMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	created_at     *time.Time
+	updated_at     *time.Time
+	price          *float64
+	addprice       *float64
+	market_low     *float64
+	addmarket_low  *float64
+	market_mid     *float64
+	addmarket_mid  *float64
+	market_high    *float64
+	addmarket_high *float64
+	direct_low     *float64
+	adddirect_low  *float64
+	source         *string
+	source_id      *string
+	recorded_at    *time.Time
+	notes          *string
+	clearedFields  map[string]struct{}
+	entity         *uuid.UUID
+	clearedentity  bool
+	done           bool
+	oldValue       func(context.Context) (*EntityPriceHistory, error)
+	predicates     []predicate.EntityPriceHistory
+}
+
+var _ ent.Mutation = (*EntityPriceHistoryMutation)(nil)
+
+// entitypricehistoryOption allows management of the mutation configuration using functional options.
+type entitypricehistoryOption func(*EntityPriceHistoryMutation)
+
+// newEntityPriceHistoryMutation creates new mutation for the EntityPriceHistory entity.
+func newEntityPriceHistoryMutation(c config, op Op, opts ...entitypricehistoryOption) *EntityPriceHistoryMutation {
+	m := &EntityPriceHistoryMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeEntityPriceHistory,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withEntityPriceHistoryID sets the ID field of the mutation.
+func withEntityPriceHistoryID(id uuid.UUID) entitypricehistoryOption {
+	return func(m *EntityPriceHistoryMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *EntityPriceHistory
+		)
+		m.oldValue = func(ctx context.Context) (*EntityPriceHistory, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().EntityPriceHistory.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withEntityPriceHistory sets the old EntityPriceHistory of the mutation.
+func withEntityPriceHistory(node *EntityPriceHistory) entitypricehistoryOption {
+	return func(m *EntityPriceHistoryMutation) {
+		m.oldValue = func(context.Context) (*EntityPriceHistory, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m EntityPriceHistoryMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m EntityPriceHistoryMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of EntityPriceHistory entities.
+func (m *EntityPriceHistoryMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *EntityPriceHistoryMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *EntityPriceHistoryMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().EntityPriceHistory.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *EntityPriceHistoryMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *EntityPriceHistoryMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *EntityPriceHistoryMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *EntityPriceHistoryMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *EntityPriceHistoryMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *EntityPriceHistoryMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetEntityID sets the "entity_id" field.
+func (m *EntityPriceHistoryMutation) SetEntityID(u uuid.UUID) {
+	m.entity = &u
+}
+
+// EntityID returns the value of the "entity_id" field in the mutation.
+func (m *EntityPriceHistoryMutation) EntityID() (r uuid.UUID, exists bool) {
+	v := m.entity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEntityID returns the old "entity_id" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldEntityID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEntityID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEntityID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEntityID: %w", err)
+	}
+	return oldValue.EntityID, nil
+}
+
+// ResetEntityID resets all changes to the "entity_id" field.
+func (m *EntityPriceHistoryMutation) ResetEntityID() {
+	m.entity = nil
+}
+
+// SetPrice sets the "price" field.
+func (m *EntityPriceHistoryMutation) SetPrice(f float64) {
+	m.price = &f
+	m.addprice = nil
+}
+
+// Price returns the value of the "price" field in the mutation.
+func (m *EntityPriceHistoryMutation) Price() (r float64, exists bool) {
+	v := m.price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPrice returns the old "price" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldPrice(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPrice is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPrice requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPrice: %w", err)
+	}
+	return oldValue.Price, nil
+}
+
+// AddPrice adds f to the "price" field.
+func (m *EntityPriceHistoryMutation) AddPrice(f float64) {
+	if m.addprice != nil {
+		*m.addprice += f
+	} else {
+		m.addprice = &f
+	}
+}
+
+// AddedPrice returns the value that was added to the "price" field in this mutation.
+func (m *EntityPriceHistoryMutation) AddedPrice() (r float64, exists bool) {
+	v := m.addprice
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPrice resets all changes to the "price" field.
+func (m *EntityPriceHistoryMutation) ResetPrice() {
+	m.price = nil
+	m.addprice = nil
+}
+
+// SetMarketLow sets the "market_low" field.
+func (m *EntityPriceHistoryMutation) SetMarketLow(f float64) {
+	m.market_low = &f
+	m.addmarket_low = nil
+}
+
+// MarketLow returns the value of the "market_low" field in the mutation.
+func (m *EntityPriceHistoryMutation) MarketLow() (r float64, exists bool) {
+	v := m.market_low
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMarketLow returns the old "market_low" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldMarketLow(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMarketLow is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMarketLow requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMarketLow: %w", err)
+	}
+	return oldValue.MarketLow, nil
+}
+
+// AddMarketLow adds f to the "market_low" field.
+func (m *EntityPriceHistoryMutation) AddMarketLow(f float64) {
+	if m.addmarket_low != nil {
+		*m.addmarket_low += f
+	} else {
+		m.addmarket_low = &f
+	}
+}
+
+// AddedMarketLow returns the value that was added to the "market_low" field in this mutation.
+func (m *EntityPriceHistoryMutation) AddedMarketLow() (r float64, exists bool) {
+	v := m.addmarket_low
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearMarketLow clears the value of the "market_low" field.
+func (m *EntityPriceHistoryMutation) ClearMarketLow() {
+	m.market_low = nil
+	m.addmarket_low = nil
+	m.clearedFields[entitypricehistory.FieldMarketLow] = struct{}{}
+}
+
+// MarketLowCleared returns if the "market_low" field was cleared in this mutation.
+func (m *EntityPriceHistoryMutation) MarketLowCleared() bool {
+	_, ok := m.clearedFields[entitypricehistory.FieldMarketLow]
+	return ok
+}
+
+// ResetMarketLow resets all changes to the "market_low" field.
+func (m *EntityPriceHistoryMutation) ResetMarketLow() {
+	m.market_low = nil
+	m.addmarket_low = nil
+	delete(m.clearedFields, entitypricehistory.FieldMarketLow)
+}
+
+// SetMarketMid sets the "market_mid" field.
+func (m *EntityPriceHistoryMutation) SetMarketMid(f float64) {
+	m.market_mid = &f
+	m.addmarket_mid = nil
+}
+
+// MarketMid returns the value of the "market_mid" field in the mutation.
+func (m *EntityPriceHistoryMutation) MarketMid() (r float64, exists bool) {
+	v := m.market_mid
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMarketMid returns the old "market_mid" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldMarketMid(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMarketMid is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMarketMid requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMarketMid: %w", err)
+	}
+	return oldValue.MarketMid, nil
+}
+
+// AddMarketMid adds f to the "market_mid" field.
+func (m *EntityPriceHistoryMutation) AddMarketMid(f float64) {
+	if m.addmarket_mid != nil {
+		*m.addmarket_mid += f
+	} else {
+		m.addmarket_mid = &f
+	}
+}
+
+// AddedMarketMid returns the value that was added to the "market_mid" field in this mutation.
+func (m *EntityPriceHistoryMutation) AddedMarketMid() (r float64, exists bool) {
+	v := m.addmarket_mid
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearMarketMid clears the value of the "market_mid" field.
+func (m *EntityPriceHistoryMutation) ClearMarketMid() {
+	m.market_mid = nil
+	m.addmarket_mid = nil
+	m.clearedFields[entitypricehistory.FieldMarketMid] = struct{}{}
+}
+
+// MarketMidCleared returns if the "market_mid" field was cleared in this mutation.
+func (m *EntityPriceHistoryMutation) MarketMidCleared() bool {
+	_, ok := m.clearedFields[entitypricehistory.FieldMarketMid]
+	return ok
+}
+
+// ResetMarketMid resets all changes to the "market_mid" field.
+func (m *EntityPriceHistoryMutation) ResetMarketMid() {
+	m.market_mid = nil
+	m.addmarket_mid = nil
+	delete(m.clearedFields, entitypricehistory.FieldMarketMid)
+}
+
+// SetMarketHigh sets the "market_high" field.
+func (m *EntityPriceHistoryMutation) SetMarketHigh(f float64) {
+	m.market_high = &f
+	m.addmarket_high = nil
+}
+
+// MarketHigh returns the value of the "market_high" field in the mutation.
+func (m *EntityPriceHistoryMutation) MarketHigh() (r float64, exists bool) {
+	v := m.market_high
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMarketHigh returns the old "market_high" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldMarketHigh(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMarketHigh is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMarketHigh requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMarketHigh: %w", err)
+	}
+	return oldValue.MarketHigh, nil
+}
+
+// AddMarketHigh adds f to the "market_high" field.
+func (m *EntityPriceHistoryMutation) AddMarketHigh(f float64) {
+	if m.addmarket_high != nil {
+		*m.addmarket_high += f
+	} else {
+		m.addmarket_high = &f
+	}
+}
+
+// AddedMarketHigh returns the value that was added to the "market_high" field in this mutation.
+func (m *EntityPriceHistoryMutation) AddedMarketHigh() (r float64, exists bool) {
+	v := m.addmarket_high
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearMarketHigh clears the value of the "market_high" field.
+func (m *EntityPriceHistoryMutation) ClearMarketHigh() {
+	m.market_high = nil
+	m.addmarket_high = nil
+	m.clearedFields[entitypricehistory.FieldMarketHigh] = struct{}{}
+}
+
+// MarketHighCleared returns if the "market_high" field was cleared in this mutation.
+func (m *EntityPriceHistoryMutation) MarketHighCleared() bool {
+	_, ok := m.clearedFields[entitypricehistory.FieldMarketHigh]
+	return ok
+}
+
+// ResetMarketHigh resets all changes to the "market_high" field.
+func (m *EntityPriceHistoryMutation) ResetMarketHigh() {
+	m.market_high = nil
+	m.addmarket_high = nil
+	delete(m.clearedFields, entitypricehistory.FieldMarketHigh)
+}
+
+// SetDirectLow sets the "direct_low" field.
+func (m *EntityPriceHistoryMutation) SetDirectLow(f float64) {
+	m.direct_low = &f
+	m.adddirect_low = nil
+}
+
+// DirectLow returns the value of the "direct_low" field in the mutation.
+func (m *EntityPriceHistoryMutation) DirectLow() (r float64, exists bool) {
+	v := m.direct_low
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDirectLow returns the old "direct_low" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldDirectLow(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDirectLow is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDirectLow requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDirectLow: %w", err)
+	}
+	return oldValue.DirectLow, nil
+}
+
+// AddDirectLow adds f to the "direct_low" field.
+func (m *EntityPriceHistoryMutation) AddDirectLow(f float64) {
+	if m.adddirect_low != nil {
+		*m.adddirect_low += f
+	} else {
+		m.adddirect_low = &f
+	}
+}
+
+// AddedDirectLow returns the value that was added to the "direct_low" field in this mutation.
+func (m *EntityPriceHistoryMutation) AddedDirectLow() (r float64, exists bool) {
+	v := m.adddirect_low
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearDirectLow clears the value of the "direct_low" field.
+func (m *EntityPriceHistoryMutation) ClearDirectLow() {
+	m.direct_low = nil
+	m.adddirect_low = nil
+	m.clearedFields[entitypricehistory.FieldDirectLow] = struct{}{}
+}
+
+// DirectLowCleared returns if the "direct_low" field was cleared in this mutation.
+func (m *EntityPriceHistoryMutation) DirectLowCleared() bool {
+	_, ok := m.clearedFields[entitypricehistory.FieldDirectLow]
+	return ok
+}
+
+// ResetDirectLow resets all changes to the "direct_low" field.
+func (m *EntityPriceHistoryMutation) ResetDirectLow() {
+	m.direct_low = nil
+	m.adddirect_low = nil
+	delete(m.clearedFields, entitypricehistory.FieldDirectLow)
+}
+
+// SetSource sets the "source" field.
+func (m *EntityPriceHistoryMutation) SetSource(s string) {
+	m.source = &s
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *EntityPriceHistoryMutation) Source() (r string, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldSource(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *EntityPriceHistoryMutation) ResetSource() {
+	m.source = nil
+}
+
+// SetSourceID sets the "source_id" field.
+func (m *EntityPriceHistoryMutation) SetSourceID(s string) {
+	m.source_id = &s
+}
+
+// SourceID returns the value of the "source_id" field in the mutation.
+func (m *EntityPriceHistoryMutation) SourceID() (r string, exists bool) {
+	v := m.source_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceID returns the old "source_id" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldSourceID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceID: %w", err)
+	}
+	return oldValue.SourceID, nil
+}
+
+// ClearSourceID clears the value of the "source_id" field.
+func (m *EntityPriceHistoryMutation) ClearSourceID() {
+	m.source_id = nil
+	m.clearedFields[entitypricehistory.FieldSourceID] = struct{}{}
+}
+
+// SourceIDCleared returns if the "source_id" field was cleared in this mutation.
+func (m *EntityPriceHistoryMutation) SourceIDCleared() bool {
+	_, ok := m.clearedFields[entitypricehistory.FieldSourceID]
+	return ok
+}
+
+// ResetSourceID resets all changes to the "source_id" field.
+func (m *EntityPriceHistoryMutation) ResetSourceID() {
+	m.source_id = nil
+	delete(m.clearedFields, entitypricehistory.FieldSourceID)
+}
+
+// SetRecordedAt sets the "recorded_at" field.
+func (m *EntityPriceHistoryMutation) SetRecordedAt(t time.Time) {
+	m.recorded_at = &t
+}
+
+// RecordedAt returns the value of the "recorded_at" field in the mutation.
+func (m *EntityPriceHistoryMutation) RecordedAt() (r time.Time, exists bool) {
+	v := m.recorded_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRecordedAt returns the old "recorded_at" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldRecordedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRecordedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRecordedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRecordedAt: %w", err)
+	}
+	return oldValue.RecordedAt, nil
+}
+
+// ResetRecordedAt resets all changes to the "recorded_at" field.
+func (m *EntityPriceHistoryMutation) ResetRecordedAt() {
+	m.recorded_at = nil
+}
+
+// SetNotes sets the "notes" field.
+func (m *EntityPriceHistoryMutation) SetNotes(s string) {
+	m.notes = &s
+}
+
+// Notes returns the value of the "notes" field in the mutation.
+func (m *EntityPriceHistoryMutation) Notes() (r string, exists bool) {
+	v := m.notes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNotes returns the old "notes" field's value of the EntityPriceHistory entity.
+// If the EntityPriceHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EntityPriceHistoryMutation) OldNotes(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNotes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNotes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNotes: %w", err)
+	}
+	return oldValue.Notes, nil
+}
+
+// ClearNotes clears the value of the "notes" field.
+func (m *EntityPriceHistoryMutation) ClearNotes() {
+	m.notes = nil
+	m.clearedFields[entitypricehistory.FieldNotes] = struct{}{}
+}
+
+// NotesCleared returns if the "notes" field was cleared in this mutation.
+func (m *EntityPriceHistoryMutation) NotesCleared() bool {
+	_, ok := m.clearedFields[entitypricehistory.FieldNotes]
+	return ok
+}
+
+// ResetNotes resets all changes to the "notes" field.
+func (m *EntityPriceHistoryMutation) ResetNotes() {
+	m.notes = nil
+	delete(m.clearedFields, entitypricehistory.FieldNotes)
+}
+
+// ClearEntity clears the "entity" edge to the Entity entity.
+func (m *EntityPriceHistoryMutation) ClearEntity() {
+	m.clearedentity = true
+	m.clearedFields[entitypricehistory.FieldEntityID] = struct{}{}
+}
+
+// EntityCleared reports if the "entity" edge to the Entity entity was cleared.
+func (m *EntityPriceHistoryMutation) EntityCleared() bool {
+	return m.clearedentity
+}
+
+// EntityIDs returns the "entity" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EntityID instead. It exists only for internal usage by the builders.
+func (m *EntityPriceHistoryMutation) EntityIDs() (ids []uuid.UUID) {
+	if id := m.entity; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetEntity resets all changes to the "entity" edge.
+func (m *EntityPriceHistoryMutation) ResetEntity() {
+	m.entity = nil
+	m.clearedentity = false
+}
+
+// Where appends a list predicates to the EntityPriceHistoryMutation builder.
+func (m *EntityPriceHistoryMutation) Where(ps ...predicate.EntityPriceHistory) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the EntityPriceHistoryMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *EntityPriceHistoryMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.EntityPriceHistory, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *EntityPriceHistoryMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *EntityPriceHistoryMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (EntityPriceHistory).
+func (m *EntityPriceHistoryMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *EntityPriceHistoryMutation) Fields() []string {
+	fields := make([]string, 0, 12)
+	if m.created_at != nil {
+		fields = append(fields, entitypricehistory.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, entitypricehistory.FieldUpdatedAt)
+	}
+	if m.entity != nil {
+		fields = append(fields, entitypricehistory.FieldEntityID)
+	}
+	if m.price != nil {
+		fields = append(fields, entitypricehistory.FieldPrice)
+	}
+	if m.market_low != nil {
+		fields = append(fields, entitypricehistory.FieldMarketLow)
+	}
+	if m.market_mid != nil {
+		fields = append(fields, entitypricehistory.FieldMarketMid)
+	}
+	if m.market_high != nil {
+		fields = append(fields, entitypricehistory.FieldMarketHigh)
+	}
+	if m.direct_low != nil {
+		fields = append(fields, entitypricehistory.FieldDirectLow)
+	}
+	if m.source != nil {
+		fields = append(fields, entitypricehistory.FieldSource)
+	}
+	if m.source_id != nil {
+		fields = append(fields, entitypricehistory.FieldSourceID)
+	}
+	if m.recorded_at != nil {
+		fields = append(fields, entitypricehistory.FieldRecordedAt)
+	}
+	if m.notes != nil {
+		fields = append(fields, entitypricehistory.FieldNotes)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *EntityPriceHistoryMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case entitypricehistory.FieldCreatedAt:
+		return m.CreatedAt()
+	case entitypricehistory.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case entitypricehistory.FieldEntityID:
+		return m.EntityID()
+	case entitypricehistory.FieldPrice:
+		return m.Price()
+	case entitypricehistory.FieldMarketLow:
+		return m.MarketLow()
+	case entitypricehistory.FieldMarketMid:
+		return m.MarketMid()
+	case entitypricehistory.FieldMarketHigh:
+		return m.MarketHigh()
+	case entitypricehistory.FieldDirectLow:
+		return m.DirectLow()
+	case entitypricehistory.FieldSource:
+		return m.Source()
+	case entitypricehistory.FieldSourceID:
+		return m.SourceID()
+	case entitypricehistory.FieldRecordedAt:
+		return m.RecordedAt()
+	case entitypricehistory.FieldNotes:
+		return m.Notes()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *EntityPriceHistoryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case entitypricehistory.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case entitypricehistory.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case entitypricehistory.FieldEntityID:
+		return m.OldEntityID(ctx)
+	case entitypricehistory.FieldPrice:
+		return m.OldPrice(ctx)
+	case entitypricehistory.FieldMarketLow:
+		return m.OldMarketLow(ctx)
+	case entitypricehistory.FieldMarketMid:
+		return m.OldMarketMid(ctx)
+	case entitypricehistory.FieldMarketHigh:
+		return m.OldMarketHigh(ctx)
+	case entitypricehistory.FieldDirectLow:
+		return m.OldDirectLow(ctx)
+	case entitypricehistory.FieldSource:
+		return m.OldSource(ctx)
+	case entitypricehistory.FieldSourceID:
+		return m.OldSourceID(ctx)
+	case entitypricehistory.FieldRecordedAt:
+		return m.OldRecordedAt(ctx)
+	case entitypricehistory.FieldNotes:
+		return m.OldNotes(ctx)
+	}
+	return nil, fmt.Errorf("unknown EntityPriceHistory field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EntityPriceHistoryMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case entitypricehistory.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case entitypricehistory.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case entitypricehistory.FieldEntityID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEntityID(v)
+		return nil
+	case entitypricehistory.FieldPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPrice(v)
+		return nil
+	case entitypricehistory.FieldMarketLow:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMarketLow(v)
+		return nil
+	case entitypricehistory.FieldMarketMid:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMarketMid(v)
+		return nil
+	case entitypricehistory.FieldMarketHigh:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMarketHigh(v)
+		return nil
+	case entitypricehistory.FieldDirectLow:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDirectLow(v)
+		return nil
+	case entitypricehistory.FieldSource:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case entitypricehistory.FieldSourceID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceID(v)
+		return nil
+	case entitypricehistory.FieldRecordedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRecordedAt(v)
+		return nil
+	case entitypricehistory.FieldNotes:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNotes(v)
+		return nil
+	}
+	return fmt.Errorf("unknown EntityPriceHistory field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *EntityPriceHistoryMutation) AddedFields() []string {
+	var fields []string
+	if m.addprice != nil {
+		fields = append(fields, entitypricehistory.FieldPrice)
+	}
+	if m.addmarket_low != nil {
+		fields = append(fields, entitypricehistory.FieldMarketLow)
+	}
+	if m.addmarket_mid != nil {
+		fields = append(fields, entitypricehistory.FieldMarketMid)
+	}
+	if m.addmarket_high != nil {
+		fields = append(fields, entitypricehistory.FieldMarketHigh)
+	}
+	if m.adddirect_low != nil {
+		fields = append(fields, entitypricehistory.FieldDirectLow)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *EntityPriceHistoryMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case entitypricehistory.FieldPrice:
+		return m.AddedPrice()
+	case entitypricehistory.FieldMarketLow:
+		return m.AddedMarketLow()
+	case entitypricehistory.FieldMarketMid:
+		return m.AddedMarketMid()
+	case entitypricehistory.FieldMarketHigh:
+		return m.AddedMarketHigh()
+	case entitypricehistory.FieldDirectLow:
+		return m.AddedDirectLow()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *EntityPriceHistoryMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case entitypricehistory.FieldPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPrice(v)
+		return nil
+	case entitypricehistory.FieldMarketLow:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMarketLow(v)
+		return nil
+	case entitypricehistory.FieldMarketMid:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMarketMid(v)
+		return nil
+	case entitypricehistory.FieldMarketHigh:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMarketHigh(v)
+		return nil
+	case entitypricehistory.FieldDirectLow:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDirectLow(v)
+		return nil
+	}
+	return fmt.Errorf("unknown EntityPriceHistory numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *EntityPriceHistoryMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(entitypricehistory.FieldMarketLow) {
+		fields = append(fields, entitypricehistory.FieldMarketLow)
+	}
+	if m.FieldCleared(entitypricehistory.FieldMarketMid) {
+		fields = append(fields, entitypricehistory.FieldMarketMid)
+	}
+	if m.FieldCleared(entitypricehistory.FieldMarketHigh) {
+		fields = append(fields, entitypricehistory.FieldMarketHigh)
+	}
+	if m.FieldCleared(entitypricehistory.FieldDirectLow) {
+		fields = append(fields, entitypricehistory.FieldDirectLow)
+	}
+	if m.FieldCleared(entitypricehistory.FieldSourceID) {
+		fields = append(fields, entitypricehistory.FieldSourceID)
+	}
+	if m.FieldCleared(entitypricehistory.FieldNotes) {
+		fields = append(fields, entitypricehistory.FieldNotes)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *EntityPriceHistoryMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *EntityPriceHistoryMutation) ClearField(name string) error {
+	switch name {
+	case entitypricehistory.FieldMarketLow:
+		m.ClearMarketLow()
+		return nil
+	case entitypricehistory.FieldMarketMid:
+		m.ClearMarketMid()
+		return nil
+	case entitypricehistory.FieldMarketHigh:
+		m.ClearMarketHigh()
+		return nil
+	case entitypricehistory.FieldDirectLow:
+		m.ClearDirectLow()
+		return nil
+	case entitypricehistory.FieldSourceID:
+		m.ClearSourceID()
+		return nil
+	case entitypricehistory.FieldNotes:
+		m.ClearNotes()
+		return nil
+	}
+	return fmt.Errorf("unknown EntityPriceHistory nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *EntityPriceHistoryMutation) ResetField(name string) error {
+	switch name {
+	case entitypricehistory.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case entitypricehistory.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case entitypricehistory.FieldEntityID:
+		m.ResetEntityID()
+		return nil
+	case entitypricehistory.FieldPrice:
+		m.ResetPrice()
+		return nil
+	case entitypricehistory.FieldMarketLow:
+		m.ResetMarketLow()
+		return nil
+	case entitypricehistory.FieldMarketMid:
+		m.ResetMarketMid()
+		return nil
+	case entitypricehistory.FieldMarketHigh:
+		m.ResetMarketHigh()
+		return nil
+	case entitypricehistory.FieldDirectLow:
+		m.ResetDirectLow()
+		return nil
+	case entitypricehistory.FieldSource:
+		m.ResetSource()
+		return nil
+	case entitypricehistory.FieldSourceID:
+		m.ResetSourceID()
+		return nil
+	case entitypricehistory.FieldRecordedAt:
+		m.ResetRecordedAt()
+		return nil
+	case entitypricehistory.FieldNotes:
+		m.ResetNotes()
+		return nil
+	}
+	return fmt.Errorf("unknown EntityPriceHistory field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *EntityPriceHistoryMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.entity != nil {
+		edges = append(edges, entitypricehistory.EdgeEntity)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *EntityPriceHistoryMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case entitypricehistory.EdgeEntity:
+		if id := m.entity; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *EntityPriceHistoryMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *EntityPriceHistoryMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *EntityPriceHistoryMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedentity {
+		edges = append(edges, entitypricehistory.EdgeEntity)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *EntityPriceHistoryMutation) EdgeCleared(name string) bool {
+	switch name {
+	case entitypricehistory.EdgeEntity:
+		return m.clearedentity
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *EntityPriceHistoryMutation) ClearEdge(name string) error {
+	switch name {
+	case entitypricehistory.EdgeEntity:
+		m.ClearEntity()
+		return nil
+	}
+	return fmt.Errorf("unknown EntityPriceHistory unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *EntityPriceHistoryMutation) ResetEdge(name string) error {
+	switch name {
+	case entitypricehistory.EdgeEntity:
+		m.ResetEntity()
+		return nil
+	}
+	return fmt.Errorf("unknown EntityPriceHistory edge %s", name)
 }
 
 // EntityTemplateMutation represents an operation that mutates the EntityTemplate nodes in the graph.

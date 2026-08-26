@@ -56,6 +56,16 @@ func registerRecurringTasks(app *app, cfg *config.Config, runner *graceful.Runne
 		purgeStaleExports(ctx, app)
 	}))
 
+	runner.AddPlugin(NewTask("sync-tracked-prices", 24*time.Hour, func(ctx context.Context) {
+		log.Info().Msg("starting daily sync of tracked item prices")
+		count, err := app.services.Pricing.SyncAllTrackedEntities(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to sync tracked item prices")
+			return
+		}
+		log.Info().Int("updated_count", count).Msg("completed daily sync of tracked item prices")
+	}))
+
 	runner.AddPlugin(NewTask("send-notifications", time.Hour, func(ctx context.Context) {
 		now := time.Now()
 		if now.Hour() == 8 {

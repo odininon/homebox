@@ -18,6 +18,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/authtokens"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entityfield"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitypricehistory"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/export"
@@ -96,6 +97,7 @@ func checkColumn(t, c string) error {
 			authtokens.Table:           authtokens.ValidColumn,
 			entity.Table:               entity.ValidColumn,
 			entityfield.Table:          entityfield.ValidColumn,
+			entitypricehistory.Table:   entitypricehistory.ValidColumn,
 			entitytemplate.Table:       entitytemplate.ValidColumn,
 			entitytype.Table:           entitytype.ValidColumn,
 			export.Table:               export.ValidColumn,

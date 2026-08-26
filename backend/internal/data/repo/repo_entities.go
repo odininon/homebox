@@ -138,6 +138,12 @@ type (
 		SyncChildEntityLocations bool              `json:"syncChildEntityLocations"`
 		// Warranty
 		LifetimeWarranty bool `json:"lifetimeWarranty"`
+
+		// Price Tracking
+		PriceTrackingEnabled bool    `json:"priceTrackingEnabled"`
+		PriceTrackingSource  string  `json:"priceTrackingSource"`
+		PriceTrackingID      string  `json:"priceTrackingId"`
+		CurrentMarketPrice   float64 `json:"currentMarketPrice"`
 	}
 
 	EntityPatch struct {
@@ -162,6 +168,10 @@ type (
 		UpdatedAt   time.Time `json:"updatedAt"`
 
 		PurchasePrice float64 `json:"purchasePrice"`
+
+		// Price Tracking
+		CurrentMarketPrice   float64 `json:"currentMarketPrice"`
+		PriceTrackingEnabled bool    `json:"priceTrackingEnabled"`
 
 		// Edges
 		Parent     *EntitySummary     `json:"parent,omitempty"     extensions:"x-nullable,x-omitempty"`
@@ -208,6 +218,13 @@ type (
 		SoldTo    string     `json:"soldTo"`
 		SoldPrice float64    `json:"soldPrice"`
 		SoldNotes string     `json:"soldNotes"`
+
+		// Price Tracking
+		CurrentMarketPrice   float64    `json:"currentMarketPrice"`
+		LastPriceSyncAt      *time.Time `json:"lastPriceSyncAt,omitempty" extensions:"x-nullable,x-omitempty"`
+		PriceTrackingEnabled bool       `json:"priceTrackingEnabled"`
+		PriceTrackingSource  string     `json:"priceTrackingSource"`
+		PriceTrackingID      string     `json:"priceTrackingId"`
 
 		// Extras
 		Notes string `json:"notes"`
@@ -258,16 +275,18 @@ func mapEntitySummary(e *ent.Entity) EntitySummary {
 	}
 
 	return EntitySummary{
-		ID:            e.ID,
-		AssetID:       AssetID(e.AssetID),
-		Name:          e.Name,
-		Description:   e.Description,
-		ImportRef:     e.ImportRef,
-		Quantity:      e.Quantity,
-		CreatedAt:     e.CreatedAt,
-		UpdatedAt:     e.UpdatedAt,
-		Archived:      e.Archived,
-		PurchasePrice: e.PurchasePrice,
+		ID:                   e.ID,
+		AssetID:              AssetID(e.AssetID),
+		Name:                 e.Name,
+		Description:          e.Description,
+		ImportRef:            e.ImportRef,
+		Quantity:             e.Quantity,
+		CreatedAt:            e.CreatedAt,
+		UpdatedAt:            e.UpdatedAt,
+		Archived:             e.Archived,
+		PurchasePrice:        e.PurchasePrice,
+		CurrentMarketPrice:   e.CurrentMarketPrice,
+		PriceTrackingEnabled: e.PriceTrackingEnabled,
 
 		// Edges
 		Parent:     parent,
@@ -330,6 +349,11 @@ func mapEntityOut(e *ent.Entity) EntityOut {
 		})
 	}
 
+	var lastPriceSyncAt *time.Time
+	if !e.LastPriceSyncAt.IsZero() {
+		lastPriceSyncAt = &e.LastPriceSyncAt
+	}
+
 	return EntityOut{
 		Parent:                   parent,
 		AssetID:                  AssetID(e.AssetID),
@@ -353,6 +377,13 @@ func mapEntityOut(e *ent.Entity) EntityOut {
 		SoldTo:    e.SoldTo,
 		SoldPrice: e.SoldPrice,
 		SoldNotes: e.SoldNotes,
+
+		// Price Tracking
+		CurrentMarketPrice:   e.CurrentMarketPrice,
+		LastPriceSyncAt:      lastPriceSyncAt,
+		PriceTrackingEnabled: e.PriceTrackingEnabled,
+		PriceTrackingSource:  e.PriceTrackingSource,
+		PriceTrackingID:      e.PriceTrackingID,
 
 		// Extras
 		Notes:       e.Notes,
@@ -1571,7 +1602,14 @@ func (r *EntityRepository) UpdateByGroup(ctx context.Context, gid uuid.UUID, dat
 		SetWarrantyDetails(data.WarrantyDetails).
 		SetQuantity(data.Quantity).
 		SetAssetID(int64(data.AssetID)).
-		SetSyncChildEntityLocations(data.SyncChildEntityLocations)
+		SetSyncChildEntityLocations(data.SyncChildEntityLocations).
+		SetPriceTrackingEnabled(data.PriceTrackingEnabled).
+		SetPriceTrackingSource(data.PriceTrackingSource).
+		SetPriceTrackingID(data.PriceTrackingID)
+
+	if data.CurrentMarketPrice > 0 {
+		q.SetCurrentMarketPrice(data.CurrentMarketPrice)
+	}
 
 	// Date fields are nullable. Writing types.Date{}.Time() would persist
 	// the 0001-01-01 sentinel that ZeroOutTimeFields then has to chase —

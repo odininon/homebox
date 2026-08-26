@@ -224,6 +224,13 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.Get("/entities/{id}/maintenance", chain.ToHandlerFunc(v1Ctrl.HandleMaintenanceLogGet(), userMW...))
 		r.Post("/entities/{id}/maintenance", chain.ToHandlerFunc(v1Ctrl.HandleMaintenanceEntryCreate(), userMW...))
 
+		// Entity price history & tracking endpoints
+		r.Get("/entities/{id}/prices", chain.ToHandlerFunc(v1Ctrl.HandleItemPricesGet(), userMW...))
+		r.Post("/entities/{id}/prices", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceCreate(), userMW...))
+		r.Post("/entities/{id}/prices/sync", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceSync(), userMW...))
+		r.Post("/entities/{id}/prices/auto-detect", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceAutoDetect(), userMW...))
+		r.Delete("/entities/{id}/prices/{price_id}", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceDelete(), userMW...))
+
 		r.Get("/assets/{id}", chain.ToHandlerFunc(v1Ctrl.HandleAssetGet(), userMW...))
 
 		// Entity Templates
@@ -254,6 +261,7 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		}
 
 		r.Get("/products/search-from-barcode", chain.ToHandlerFunc(v1Ctrl.HandleProductSearchFromBarcode(a.conf.Barcode), userMW...))
+		r.Get("/products/search-pricing", chain.ToHandlerFunc(v1Ctrl.HandleProductPricingSearch(), userMW...))
 
 		r.Get("/qrcode", chain.ToHandlerFunc(v1Ctrl.HandleGenerateQRCode(), assetMW...))
 		r.Get(

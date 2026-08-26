@@ -95,6 +95,22 @@ func (Entity) Fields() []ent.Field {
 		field.String("sold_notes").
 			MaxLen(1000).
 			Optional(),
+
+		// ------------------------------------
+		// Price Tracking / Market Valuation
+		field.Float("current_market_price").
+			Default(0),
+		field.Time("last_price_sync_at").
+			Optional(),
+		field.Bool("price_tracking_enabled").
+			Default(false),
+		field.String("price_tracking_source").
+			MaxLen(100).
+			Default("tcgplayer").
+			Optional(),
+		field.String("price_tracking_id").
+			MaxLen(100).
+			Optional(),
 	}
 }
 
@@ -120,5 +136,6 @@ func (Entity) Edges() []ent.Edge {
 		owned("fields", EntityField.Type),
 		owned("maintenance_entries", MaintenanceEntry.Type),
 		owned("attachments", Attachment.Type),
+		owned("price_history", EntityPriceHistory.Type),
 	}
 }
