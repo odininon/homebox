@@ -6,7 +6,8 @@
   import { useFormatCurrency } from "~/composables/use-formatters";
   import BaseCard from "@/components/Base/Card.vue";
   import { Button } from "@/components/ui/button";
-  import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+  import { DialogRoot } from "reka-ui";
+  import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
   import { Input } from "@/components/ui/input";
   import { Label } from "@/components/ui/label";
   import PriceHistoryChart from "./PriceHistoryChart.vue";
@@ -42,8 +43,8 @@
 
   // Manual snapshot dialog state
   const manualDialogOpen = ref(false);
-  const manualPrice = ref<number | null>(null);
-  const manualDate = ref<string>(new Date().toISOString().split("T")[0]);
+  const manualPrice = ref<number>();
+  const manualDate = ref<string>(new Date().toISOString().split("T")[0] || "");
   const manualNotes = ref<string>("");
 
   const showSnapshotTable = ref(false);
@@ -67,7 +68,7 @@
       const sorted = [...priceHistory.value].sort(
         (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
       );
-      return sorted[0].price;
+      return sorted[0]?.price ?? (props.item.currentMarketPrice || 0);
     }
     return props.item.currentMarketPrice || 0;
   });
@@ -156,14 +157,14 @@
   }
 
   async function addManualSnapshot() {
-    if (!props.item?.id || manualPrice.value === null || manualPrice.value < 0) {
+    if (!props.item?.id || manualPrice.value === undefined || manualPrice.value === null || manualPrice.value < 0) {
       toast.error(t("items.toast.invalid_price", "Please enter a valid price."));
       return;
     }
 
     const { error } = await api.items.pricing.create(props.item.id, {
       price: manualPrice.value,
-      recordedAt: new Date(manualDate.value || Date.now()),
+      recordedAt: new Date(manualDate.value || Date.now()).toISOString(),
       notes: manualNotes.value,
       source: "manual",
       marketLow: 0,
@@ -180,7 +181,7 @@
 
     toast.success(t("items.toast.add_price_success", "Price snapshot recorded!"));
     manualDialogOpen.value = false;
-    manualPrice.value = null;
+    manualPrice.value = undefined;
     manualNotes.value = "";
     await loadPriceHistory();
     emit("refresh");
@@ -389,7 +390,7 @@
     </div>
 
     <!-- Manual Price Snapshot Dialog -->
-    <Dialog v-model:open="manualDialogOpen">
+    <DialogRoot v-model:open="manualDialogOpen">
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{{ $t("items.add_manual_price", "Add Price Snapshot") }}</DialogTitle>
@@ -421,6 +422,6 @@
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </DialogRoot>
   </BaseCard>
 </template>

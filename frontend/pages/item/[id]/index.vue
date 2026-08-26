@@ -605,6 +605,9 @@
         name: field.name,
         type: "text",
         textValue: field.textValue || "",
+        booleanValue: false,
+        numberValue: 0,
+        timeValue: "",
       })),
     };
 

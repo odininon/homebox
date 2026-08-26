@@ -68,6 +68,9 @@
         name: field.name,
         type: field.type,
         textValue: field.textValue,
+        booleanValue: field.booleanValue ?? false,
+        numberValue: field.numberValue ?? 0,
+        timeValue: field.timeValue ?? "",
       })),
     };
 

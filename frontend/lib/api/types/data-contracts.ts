@@ -744,7 +744,7 @@ export interface EntUserGroupEdges {
   user: EntUser;
 }
 
-export interface PricingProductSearchResult {
+export interface ProductSearchResult {
   cleanName: string;
   groupId: number;
   groupName: string;
