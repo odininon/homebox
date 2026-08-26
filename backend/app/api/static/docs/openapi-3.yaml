@@ -3404,6 +3404,8 @@ components:
           maxLength: 1000
         entityTypeId:
           type: string
+          x-omitempty: true
+          nullable: true
         manufacturer:
           type: string
           maxLength: 255
@@ -3936,6 +3938,8 @@ components:
           maxLength: 1000
         entityTypeId:
           type: string
+          x-omitempty: true
+          nullable: true
         fields:
           type: array
           items:
@@ -4399,6 +4403,7 @@ components:
           type: string
         timeValue:
           type: string
+          nullable: true
         type:
           type: string
     repo.TemplateLocationSummary:

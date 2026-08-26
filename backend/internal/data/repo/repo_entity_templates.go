@@ -13,6 +13,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/group"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/tag"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/templatefield"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/types"
 )
 
 type EntityTemplatesRepository struct {
@@ -28,7 +29,7 @@ type (
 		TextValue    string     `json:"textValue"`
 		NumberValue  int        `json:"numberValue"`
 		BooleanValue bool       `json:"booleanValue"`
-		TimeValue    time.Time  `json:"timeValue"`
+		TimeValue    types.Date `json:"timeValue"    extensions:"x-nullable"`
 	}
 
 	TemplateTagSummary struct {
@@ -134,7 +135,7 @@ func mapTemplateField(field *ent.TemplateField) TemplateField {
 		TextValue:    field.TextValue,
 		NumberValue:  field.NumberValue,
 		BooleanValue: field.BooleanValue,
-		TimeValue:    field.TimeValue,
+		TimeValue:    types.Date(field.TimeValue),
 	}
 }
 

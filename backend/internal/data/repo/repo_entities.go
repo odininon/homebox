@@ -89,12 +89,12 @@ type (
 
 	EntityCreate struct {
 		ImportRef    string    `json:"-"`
-		ParentID     uuid.UUID `json:"parentId"     extensions:"x-nullable"`
-		Name         string    `json:"name"         validate:"required,min=1,max=255"`
+		ParentID     uuid.UUID `json:"parentId"               extensions:"x-nullable"`
+		Name         string    `json:"name"                   validate:"required,min=1,max=255"`
 		Quantity     float64   `json:"quantity"`
-		Description  string    `json:"description"  validate:"max=1000"`
+		Description  string    `json:"description"            validate:"max=1000"`
 		AssetID      AssetID   `json:"-"`
-		EntityTypeID uuid.UUID `json:"entityTypeId"`
+		EntityTypeID uuid.UUID `json:"entityTypeId,omitempty" extensions:"x-nullable,x-omitempty"`
 
 		// Identifications — optional at create time; populated e.g. by the
 		// barcode product-search import flow (#1578).
@@ -132,7 +132,7 @@ type (
 		SoldPrice                float64           `json:"soldPrice"                extensions:"x-nullable,x-omitempty"`
 		ParentID                 uuid.UUID         `json:"parentId"                 extensions:"x-nullable,x-omitempty"`
 		ID                       uuid.UUID         `json:"id"`
-		EntityTypeID             uuid.UUID         `json:"entityTypeId"`
+		EntityTypeID             uuid.UUID         `json:"entityTypeId,omitempty"   extensions:"x-nullable,x-omitempty"`
 		Insured                  bool              `json:"insured"`
 		Archived                 bool              `json:"archived"`
 		SyncChildEntityLocations bool              `json:"syncChildEntityLocations"`

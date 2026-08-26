@@ -191,6 +191,7 @@ tasks:
       - pnpm run typecheck
 
   test:ci:
+    aliases: [ci:test]
     env:
       UNSAFE_DISABLE_PASSWORD_PROJECTION: "yes_i_am_sure"
     desc: Runs end-to-end test on a live server (only for use in CI)
@@ -202,6 +203,7 @@ tasks:
     silent: true
 
   test:ci:postgresql:
+    aliases: [ci:test:postgres, ci:test:postgresql]
     env:
       UNSAFE_DISABLE_PASSWORD_PROJECTION: "yes_i_am_sure"
       HBOX_DATABASE_DRIVER: postgres

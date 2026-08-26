@@ -806,7 +806,7 @@ export interface DuplicateOptions {
 export interface EntityCreate {
   /** @maxLength 1000 */
   description: string;
-  entityTypeId: string;
+  entityTypeId?: string | null;
   /** @maxLength 255 */
   manufacturer?: string | null;
   /**
@@ -1081,7 +1081,7 @@ export interface EntityUpdate {
   currentMarketPrice: number;
   /** @maxLength 1000 */
   description: string;
-  entityTypeId: string;
+  entityTypeId?: string | null;
   fields: EntityFieldData[];
   id: string;
   insured: boolean;
@@ -1351,7 +1351,7 @@ export interface TemplateField {
   name: string;
   numberValue: number;
   textValue: string;
-  timeValue: string;
+  timeValue?: string | null;
   type: string;
 }
 
