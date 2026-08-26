@@ -1,4 +1,4 @@
-name: Pull Request CI
+name: CI
 
 permissions:
   contents: read
@@ -7,11 +7,10 @@ permissions:
   pull-requests: write
 
 on:
-  pull_request:
+  push:
     branches:
       - main
       - vnext
-
     paths:
       - 'backend/**'
       - 'frontend/**'
@@ -19,6 +18,18 @@ on:
       - '.github/workflows/partial-frontend.yaml'
       - '.github/workflows/e2e-partial.yaml'
       - '.github/workflows/pull-requests.yaml'
+  pull_request:
+    branches:
+      - main
+      - vnext
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/partial-backend.yaml'
+      - '.github/workflows/partial-frontend.yaml'
+      - '.github/workflows/e2e-partial.yaml'
+      - '.github/workflows/pull-requests.yaml'
+  workflow_dispatch:
 
 jobs:
   backend-tests:

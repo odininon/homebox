@@ -20,6 +20,7 @@ on:
       - 'Dockerfile.hardened'
       - '.dockerignore'
       - '.github/workflows/docker-publish-hardened.yaml'
+  workflow_dispatch:
 
 permissions:
   contents: read        # Access to repository contents
