@@ -52,6 +52,7 @@ func main() {
 		NewReReplace(` Repo`, " "),
 		NewReReplace(` PaginationResultRepo`, " PaginationResult"),
 		NewReReplace(` Services`, " "),
+		NewReReplace(` Pricing`, " "),
 		NewReReplace(` V1`, " "),
 		NewReReplace(`\?:`, ":"),
 		NewReReplace(`(\w+):\s(.*null.*)`, "$1?: $2"), // make null union types optional

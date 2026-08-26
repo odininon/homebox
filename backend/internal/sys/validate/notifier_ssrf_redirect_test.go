@@ -54,17 +54,14 @@ func TestNotifierRedirectSSRF_Unguarded(t *testing.T) {
 	assert.Equal(t, int32(1), victimHits(), "unguarded: redirect to loopback victim IS followed (SSRF)")
 }
 
-// TestNotifierRedirectSSRF_Guarded verifies the fix: with the redirect guard
-// installed on http.DefaultClient, a 307 to a blocked (loopback) destination is
+// TestNotifierRedirectSSRF_Guarded verifies the fix: with validate.SendNotifier
+// using the redirect guard, a 307 to a blocked (loopback) destination is
 // refused, the send fails, and the victim is never reached.
 func TestNotifierRedirectSSRF_Guarded(t *testing.T) {
-	saved := http.DefaultClient.CheckRedirect
-	http.DefaultClient.CheckRedirect = validate.NotifierRedirectGuard(&config.NotifierConf{BlockLocalhost: true})
-	t.Cleanup(func() { http.DefaultClient.CheckRedirect = saved })
-
 	notifierURL, victimHits := startVictimAndRedirector(t)
 
-	err := shoutrrr.Send(notifierURL, "Test message from Homebox")
+	err := validate.SendNotifier(&config.NotifierConf{BlockLocalhost: true}, notifierURL, "Test message from Homebox")
 	require.Error(t, err, "guarded: redirect to loopback must be refused and the send must fail")
 	assert.Equal(t, int32(0), victimHits(), "guarded: the blocked redirect target must never be reached")
 }
+

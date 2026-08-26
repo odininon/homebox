@@ -44,7 +44,9 @@
       "1Y": 365 * 24 * 60 * 60 * 1000,
     };
 
-    const cutoff = now - ranges[selectedRange.value];
+    const rangeMs = ranges[selectedRange.value];
+    if (!rangeMs) return sorted;
+    const cutoff = now - rangeMs;
     const inRange = sorted.filter(e => new Date(e.recordedAt).getTime() >= cutoff);
     return inRange.length > 0 ? inRange : sorted;
   });
@@ -58,64 +60,42 @@
   const chartHeight = computed(() => svgHeight - padding.top - padding.bottom);
 
   const priceRange = computed(() => {
-    if (filteredEntries.value.length === 0) {
-      return { min: 0, max: 100 };
-    }
-
-    let min = Math.min(...filteredEntries.value.map(e => e.price));
-    let max = Math.max(...filteredEntries.value.map(e => e.price));
-
+    if (filteredEntries.value.length === 0) return { min: 0, max: 100 };
+    const prices = filteredEntries.value.map(e => e.price);
     if (props.purchasePrice && props.purchasePrice > 0) {
-      min = Math.min(min, props.purchasePrice);
-      max = Math.max(max, props.purchasePrice);
+      prices.push(props.purchasePrice);
     }
-
-    if (min === max) {
-      min = Math.max(0, min * 0.8);
-      max = max * 1.2 || 100;
-    } else {
-      const margin = (max - min) * 0.1;
-      min = Math.max(0, min - margin);
-      max = max + margin;
-    }
-
-    return { min, max };
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const buffer = (max - min) * 0.1 || 10;
+    return {
+      min: Math.max(0, min - buffer),
+      max: max + buffer,
+    };
   });
-
-  const timeRange = computed(() => {
-    if (filteredEntries.value.length === 0) {
-      const now = Date.now();
-      return { min: now - 86400000, max: now };
-    }
-
-    const times = filteredEntries.value.map(e => new Date(e.recordedAt).getTime());
-    let min = Math.min(...times);
-    let max = Math.max(...times);
-
-    if (min === max) {
-      min = min - 86400000;
-      max = max + 86400000;
-    }
-
-    return { min, max };
-  });
-
-  const getX = (dateStr: string | Date) => {
-    const t = new Date(dateStr).getTime();
-    const ratio = (t - timeRange.value.min) / (timeRange.value.max - timeRange.value.min || 1);
-    return padding.left + ratio * chartWidth.value;
-  };
 
   const getY = (price: number) => {
-    const ratio = (price - priceRange.value.min) / (priceRange.value.max - priceRange.value.min || 1);
-    return padding.top + (1 - ratio) * chartHeight.value;
+    const range = priceRange.value.max - priceRange.value.min;
+    if (range === 0) return padding.top + chartHeight.value / 2;
+    const normalized = (price - priceRange.value.min) / range;
+    return padding.top + chartHeight.value - normalized * chartHeight.value;
   };
 
-  const points = computed(() => {
-    return filteredEntries.value.map(e => ({
-      x: getX(e.recordedAt),
-      y: getY(e.price),
-      entry: e,
+  const getX = (recordedAt: string | Date) => {
+    if (filteredEntries.value.length <= 1) return padding.left + chartWidth.value / 2;
+    const firstTime = new Date(filteredEntries.value[0]?.recordedAt ?? 0).getTime();
+    const lastTime = new Date(filteredEntries.value[filteredEntries.value.length - 1]?.recordedAt ?? 0).getTime();
+    const timeRange = lastTime - firstTime;
+    if (timeRange === 0) return padding.left + chartWidth.value / 2;
+    const currentTime = new Date(recordedAt).getTime();
+    return padding.left + ((currentTime - firstTime) / timeRange) * chartWidth.value;
+  };
+
+  const points = computed<{ x: number; y: number; entry: PriceHistoryEntry }[]>(() => {
+    return filteredEntries.value.map(entry => ({
+      x: getX(entry.recordedAt),
+      y: getY(entry.price),
+      entry,
     }));
   });
 
@@ -123,6 +103,7 @@
     if (points.value.length === 0) return "";
     if (points.value.length === 1) {
       const p = points.value[0];
+      if (!p) return "";
       return `M ${padding.left} ${p.y} L ${padding.left + chartWidth.value} ${p.y}`;
     }
 
@@ -136,11 +117,13 @@
     const bottomY = padding.top + chartHeight.value;
     if (points.value.length === 1) {
       const p = points.value[0];
+      if (!p) return "";
       return `M ${padding.left} ${bottomY} L ${padding.left} ${p.y} L ${padding.left + chartWidth.value} ${p.y} L ${padding.left + chartWidth.value} ${bottomY} Z`;
     }
 
     const first = points.value[0];
     const last = points.value[points.value.length - 1];
+    if (!first || !last) return "";
     return `${pathData.value} L ${last.x} ${bottomY} L ${first.x} ${bottomY} Z`;
   });
 
@@ -173,6 +156,7 @@
 
     for (let i = 0; i < filteredEntries.value.length; i += step) {
       const e = filteredEntries.value[i];
+      if (!e) continue;
       const d = new Date(e.recordedAt);
       ticks.push({
         x: getX(e.recordedAt),

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/nicholas-fedor/shoutrrr"
+	"github.com/nicholas-fedor/shoutrrr/pkg/types"
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/config"
 )
 
@@ -50,4 +52,26 @@ func NotifierRedirectGuard(cfg *config.NotifierConf) func(req *http.Request, via
 		}
 		return nil
 	}
+}
+func NewNotifierHTTPClient(cfg *config.NotifierConf) *http.Client {
+	return &http.Client{
+		CheckRedirect: NotifierRedirectGuard(cfg),
+	}
+}
+
+// SendNotifier sends a notification message via shoutrrr with redirect SSRF protection enabled.
+func SendNotifier(cfg *config.NotifierConf, notifierURL, message string) error {
+	sender, err := shoutrrr.CreateSenderWithOptions(types.SenderOptions{
+		HTTPClient: NewNotifierHTTPClient(cfg),
+	}, notifierURL)
+	if err != nil {
+		return err
+	}
+	errs := sender.Send(message, nil)
+	for _, err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

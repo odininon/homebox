@@ -25,6 +25,8 @@ describe("user should be able to create an item and add an attachment", () => {
       name: `__test__.location.name_${increment}`,
       description: `__test__.location.description_${increment}`,
       entityTypeId: locationType!.id,
+      quantity: 1,
+      tagIds: [],
     });
     expect(response.status).toBe(201);
     increment++;
@@ -42,12 +44,12 @@ describe("user should be able to create an item and add an attachment", () => {
     const [location, cleanup] = await useLocation(api);
 
     const { response, data: item } = await api.items.create({
-      parentId: null,
+      parentId: location.id,
       name: "test-item",
       tagIds: [],
       description: "test-description",
       quantity: 2,
-      parentId: location.id,
+      entityTypeId: "",
     });
     expect(response.status).toBe(201);
 
@@ -77,12 +79,12 @@ describe("user should be able to create an item and add an attachment", () => {
     const [location, cleanup] = await useLocation(api);
 
     const { response, data: item } = await api.items.create({
-      parentId: null,
       name: faker.vehicle.model(),
       tagIds: [],
       description: faker.lorem.paragraph(1),
       quantity: 2,
       parentId: location.id,
+      entityTypeId: "",
     });
     expect(response.status).toBe(201);
 
@@ -101,7 +103,10 @@ describe("user should be able to create an item and add an attachment", () => {
       fields,
     };
 
-    const { response: updateResponse, data: item2 } = await api.items.update(item.id, itemUpdate as EntityUpdate);
+    const { response: updateResponse, data: item2 } = await api.items.update(
+      item.id,
+      itemUpdate as unknown as EntityUpdate
+    );
     expect(updateResponse.status).toBe(200);
 
     expect(item2.fields).toHaveLength(fields.length);
@@ -114,7 +119,10 @@ describe("user should be able to create an item and add an attachment", () => {
 
     itemUpdate.fields = [fields[0]!, fields[1]!];
 
-    const { response: updateResponse2, data: item3 } = await api.items.update(item.id, itemUpdate as EntityUpdate);
+    const { response: updateResponse2, data: item3 } = await api.items.update(
+      item.id,
+      itemUpdate as unknown as EntityUpdate
+    );
     expect(updateResponse2.status).toBe(200);
 
     expect(item3.fields).toHaveLength(2);
@@ -131,12 +139,12 @@ describe("user should be able to create an item and add an attachment", () => {
     const api = await sharedUserClient();
     const [location, cleanup] = await useLocation(api);
     const { response, data: item } = await api.items.create({
-      parentId: null,
       name: faker.vehicle.model(),
       tagIds: [],
       description: faker.lorem.paragraph(1),
       quantity: 2,
       parentId: location.id,
+      entityTypeId: "",
     });
     expect(response.status).toBe(201);
 
@@ -177,6 +185,9 @@ describe("user should be able to create an item and add an attachment", () => {
         parentId: lastLocationId,
         name: locations[i]!,
         description: "",
+        entityTypeId: location.entityType?.id || "",
+        quantity: 1,
+        tagIds: [],
       });
       expect(response.status).toBe(201);
 
@@ -189,6 +200,7 @@ describe("user should be able to create an item and add an attachment", () => {
       description: faker.lorem.paragraph(1),
       quantity: 2,
       parentId: lastLocationId,
+      entityTypeId: "",
     });
     expect(response.status).toBe(201);
 
@@ -214,6 +226,7 @@ describe("user should be able to create an item and add an attachment", () => {
       description: "test-description",
       quantity: 2,
       parentId: parentLocation.id,
+      entityTypeId: "",
     });
     expect(parentResponse.status).toBe(201);
     expect(parent.id).toBeTruthy();
@@ -224,6 +237,7 @@ describe("user should be able to create an item and add an attachment", () => {
       description: "test-description",
       quantity: 2,
       parentId: childsLocation.id,
+      entityTypeId: "",
     });
     expect(child1Response.status).toBe(201);
     const child1ItemUpdate = {
@@ -231,7 +245,10 @@ describe("user should be able to create an item and add an attachment", () => {
       parentId: parent.id,
       tagIds: [],
     };
-    const { response: child1UpdatedResponse } = await api.items.update(child1Item.id, child1ItemUpdate as EntityUpdate);
+    const { response: child1UpdatedResponse } = await api.items.update(
+      child1Item.id,
+      child1ItemUpdate as unknown as EntityUpdate
+    );
     expect(child1UpdatedResponse.status).toBe(200);
 
     const { response: child2Response, data: child2Item } = await api.items.create({
@@ -240,6 +257,7 @@ describe("user should be able to create an item and add an attachment", () => {
       description: "test-description",
       quantity: 2,
       parentId: childsLocation.id,
+      entityTypeId: "",
     });
     expect(child2Response.status).toBe(201);
     const child2ItemUpdate = {
@@ -247,7 +265,10 @@ describe("user should be able to create an item and add an attachment", () => {
       parentId: parent.id,
       tagIds: [],
     };
-    const { response: child2UpdatedResponse } = await api.items.update(child2Item.id, child2ItemUpdate as EntityUpdate);
+    const { response: child2UpdatedResponse } = await api.items.update(
+      child2Item.id,
+      child2ItemUpdate as unknown as EntityUpdate
+    );
     expect(child2UpdatedResponse.status).toBe(200);
 
     const itemUpdate = {
@@ -256,7 +277,7 @@ describe("user should be able to create an item and add an attachment", () => {
       tagIds: [],
       syncChildEntityLocations: true,
     };
-    const { response: updateResponse } = await api.items.update(parent.id, itemUpdate);
+    const { response: updateResponse } = await api.items.update(parent.id, itemUpdate as unknown as EntityUpdate);
     expect(updateResponse.status).toBe(200);
 
     // Children stay attached to the parent item (#1591) and derive their

@@ -519,7 +519,7 @@
     for (const f of item.value.fields) {
       if (f.textValue) {
         const match = f.textValue.match(/tcgplayer\.com\/(?:product\/|magic\/product\/show\?id=)(\d+)/i);
-        if (match) {
+        if (match && match[1]) {
           item.value.priceTrackingEnabled = true;
           item.value.priceTrackingSource = "tcgplayer";
           item.value.priceTrackingId = match[1];
@@ -589,6 +589,7 @@
 
     const payload: EntityUpdate = {
       ...item.value,
+      entityTypeId: item.value.entityType?.id || "",
       parentId: parent.value?.id || location.value?.id || null,
       tagIds: item.value.tagIds,
       assetId: item.value.assetId,
