@@ -152,6 +152,22 @@
 
     resetSelection();
   };
+
+  const syncPrices = async (ids: string[]) => {
+    try {
+      const { data, error } = await api.items.pricing.syncBulk(ids);
+      if (error) {
+        toast.error(t("items.toast.sync_price_failed", "Failed to sync market prices"));
+        return;
+      }
+      toast.success(
+        t("items.toast.sync_bulk_success", `Synced market prices for ${data?.updatedCount || 0} items`)
+      );
+      resetSelection();
+    } catch {
+      toast.error(t("items.toast.sync_price_failed", "Failed to sync market prices"));
+    }
+  };
 </script>
 
 <template>
@@ -233,6 +249,14 @@
           multi
             ? t("components.item.view.table.dropdown.create_maintenance_selected")
             : t("components.item.view.table.dropdown.create_maintenance_item")
+        }}
+      </DropdownMenuItem>
+      <!-- sync prices -->
+      <DropdownMenuItem @click="syncPrices(multi ? multi.items.map(row => row.original.id) : [item!.id])">
+        {{
+          multi
+            ? t("items.sync_prices_selected", "Sync Market Prices (Selected)")
+            : t("items.sync_price_item", "Sync Market Price")
         }}
       </DropdownMenuItem>
       <!-- duplicate -->

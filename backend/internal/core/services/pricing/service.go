@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/repo"
 )
 
@@ -224,12 +225,7 @@ func (s *PricingService) AutoDetectEntityTracking(ctx context.Context, gid, enti
 	return &updated, true, nil
 }
 
-func (s *PricingService) SyncAllTrackedEntities(ctx context.Context) (int, error) {
-	entities, err := s.repos.PriceHistory.GetTrackedEntities(ctx)
-	if err != nil {
-		return 0, err
-	}
-
+func (s *PricingService) syncEntitiesList(ctx context.Context, entities []*ent.Entity) (int, error) {
 	updated := 0
 	for _, e := range entities {
 		productID := 0
@@ -294,6 +290,34 @@ func (s *PricingService) SyncAllTrackedEntities(ctx context.Context) (int, error
 	return updated, nil
 }
 
+func (s *PricingService) SyncAllTrackedEntities(ctx context.Context) (int, error) {
+	entities, err := s.repos.PriceHistory.GetTrackedEntities(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return s.syncEntitiesList(ctx, entities)
+}
+
+func (s *PricingService) SyncGroupTrackedEntities(ctx context.Context, gid uuid.UUID) (int, error) {
+	entities, err := s.repos.PriceHistory.GetTrackedEntitiesByGroup(ctx, gid)
+	if err != nil {
+		return 0, err
+	}
+	return s.syncEntitiesList(ctx, entities)
+}
+
+func (s *PricingService) SyncEntitiesBulk(ctx context.Context, gid uuid.UUID, entityIDs []uuid.UUID) (int, error) {
+	if len(entityIDs) == 0 {
+		return 0, nil
+	}
+	entities, err := s.repos.PriceHistory.GetTrackedEntitiesByIDs(ctx, gid, entityIDs)
+	if err != nil {
+		return 0, err
+	}
+	return s.syncEntitiesList(ctx, entities)
+}
+
 func (s *PricingService) SearchProducts(ctx context.Context, query string) ([]ProductSearchResult, error) {
 	return s.tcgClient.SearchProducts(ctx, query)
 }
+

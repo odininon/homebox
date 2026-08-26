@@ -178,3 +178,26 @@ func (r *PriceHistoryRepository) GetTrackedEntities(ctx context.Context) ([]*ent
 		WithFields().
 		All(ctx)
 }
+
+func (r *PriceHistoryRepository) GetTrackedEntitiesByGroup(ctx context.Context, gid uuid.UUID) ([]*ent.Entity, error) {
+	return r.db.Entity.Query().
+		Where(
+			entity.PriceTrackingEnabledEQ(true),
+			entity.ArchivedEQ(false),
+			entity.HasGroupWith(group.IDEQ(gid)),
+		).
+		WithFields().
+		All(ctx)
+}
+
+func (r *PriceHistoryRepository) GetTrackedEntitiesByIDs(ctx context.Context, gid uuid.UUID, ids []uuid.UUID) ([]*ent.Entity, error) {
+	return r.db.Entity.Query().
+		Where(
+			entity.IDIn(ids...),
+			entity.ArchivedEQ(false),
+			entity.HasGroupWith(group.IDEQ(gid)),
+		).
+		WithFields().
+		All(ctx)
+}
+

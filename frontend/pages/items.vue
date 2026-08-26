@@ -8,12 +8,15 @@
   import MdiLoading from "~icons/mdi/loading";
   import MdiMagnify from "~icons/mdi/magnify";
   import MdiDelete from "~icons/mdi/delete";
+  import MdiCardsOutline from "~icons/mdi/cards-outline";
   import { Button } from "@/components/ui/button";
   import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
   import { Label } from "@/components/ui/label";
   import { Switch } from "@/components/ui/switch";
   import { Separator } from "@/components/ui/separator";
   import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  import { DialogID } from "~/components/ui/dialog-provider/utils";
+  import { useDialog } from "@/components/ui/dialog-provider";
   import BaseContainer from "@/components/Base/Container.vue";
   import SearchFilter from "~/components/Search/Filter.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
@@ -33,6 +36,7 @@
   const queryParamsInitialized = ref(false);
   const initialSearch = ref(true);
 
+  const { openDialog } = useDialog();
   const api = useUserApi();
   const loading = useMinLoader(500);
   const items = ref<EntitySummary[]>([]);
@@ -406,6 +410,10 @@
       <div class="flex w-full flex-wrap gap-2 py-2 md:flex-nowrap">
         <SearchFilter v-model="selectedLocations" :label="$t('global.locations')" :options="locationFlatTree" />
         <SearchFilter v-model="selectedTags" :label="$t('global.tags')" :options="tags" />
+        <Button size="sm" variant="outline" class="gap-1.5" @click="openDialog(DialogID.MtgSearch)">
+          <MdiCardsOutline class="size-4 text-primary" />
+          <span class="hidden sm:inline">{{ $t("menu.search_mtg", "MTG Sealed") }}</span>
+        </Button>
         <Popover>
           <PopoverTrigger as-child>
             <Button size="sm" variant="outline"> {{ $t("items.options") }}</Button>

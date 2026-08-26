@@ -141,3 +141,55 @@ func (ctrl *V1Controller) HandleProductPricingSearch() errchain.HandlerFunc {
 
 	return adapters.Query(fn, http.StatusOK)
 }
+
+type SyncPricesResponse struct {
+	UpdatedCount int `json:"updatedCount"`
+}
+
+type SyncPricesBulkRequest struct {
+	EntityIDs []uuid.UUID `json:"entityIds"`
+}
+
+// HandleItemPricesSyncAll godoc
+//
+//	@Summary	Sync All Tracked Items Market Prices for Group
+//	@Tags		Item Pricing
+//	@Produce	json
+//	@Success	200	{object}	SyncPricesResponse
+//	@Router		/v1/entities/prices/sync-all [POST]
+//	@Security	Bearer
+func (ctrl *V1Controller) HandleItemPricesSyncAll() errchain.HandlerFunc {
+	fn := func(r *http.Request) (SyncPricesResponse, error) {
+		auth := services.NewContext(r.Context())
+		count, err := ctrl.svc.Pricing.SyncGroupTrackedEntities(auth, auth.GID)
+		if err != nil {
+			return SyncPricesResponse{}, err
+		}
+		return SyncPricesResponse{UpdatedCount: count}, nil
+	}
+
+	return adapters.Command(fn, http.StatusOK)
+}
+
+// HandleItemPricesSyncBulk godoc
+//
+//	@Summary	Sync Selected Items Market Prices in Bulk
+//	@Tags		Item Pricing
+//	@Produce	json
+//	@Param		payload	body		SyncPricesBulkRequest	true	"Entity IDs to sync"
+//	@Success	200		{object}	SyncPricesResponse
+//	@Router		/v1/entities/prices/sync-bulk [POST]
+//	@Security	Bearer
+func (ctrl *V1Controller) HandleItemPricesSyncBulk() errchain.HandlerFunc {
+	fn := func(r *http.Request, body SyncPricesBulkRequest) (SyncPricesResponse, error) {
+		auth := services.NewContext(r.Context())
+		count, err := ctrl.svc.Pricing.SyncEntitiesBulk(auth, auth.GID, body.EntityIDs)
+		if err != nil {
+			return SyncPricesResponse{}, err
+		}
+		return SyncPricesResponse{UpdatedCount: count}, nil
+	}
+
+	return adapters.Action(fn, http.StatusOK)
+}
+

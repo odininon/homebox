@@ -23,15 +23,16 @@ export function makeColumns({
   refresh?: () => void;
   disableSort?: boolean;
 }): ColumnDef<EntitySummary>[] {
-  const sortable = (column: Column<EntitySummary, unknown>, key: string) => {
+  const sortable = (column: Column<EntitySummary, unknown>, key: string, fallback?: string) => {
+    const label = t(key) === key && fallback ? fallback : t(key);
     const sortState = column.getIsSorted(); // 'asc' | 'desc' | false
     if (!sortState) {
       // show the neutral up/down icon when not sorted
-      return [t(key), h(ArrowUpDown, { class: cn(["ml-2 h-4 w-4 opacity-40", disableSort && "opacity-0"]) })];
+      return [label, h(ArrowUpDown, { class: cn(["ml-2 h-4 w-4 opacity-40", disableSort && "opacity-0"]) })];
     }
     // show a single arrow that points up for asc (rotate-180) and down for desc
     return [
-      t(key),
+      label,
       h(ArrowDown, {
         class: cn([
           "ml-2 h-4 w-4 transition-transform opacity-100",
@@ -140,6 +141,103 @@ export function makeColumns({
         ),
       cell: ({ row }) =>
         h("div", { class: "text-center" }, h(Currency, { amount: Number(row.getValue("purchasePrice")) })),
+    },
+    {
+      id: "currentMarketPrice",
+      accessorKey: "currentMarketPrice",
+      header: ({ column }) =>
+        h(
+          Button,
+          {
+            variant: "ghost",
+            onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
+          },
+          () => sortable(column, "items.market_price", "Market Price")
+        ),
+      cell: ({ row }) => {
+        const item = row.original as EntitySummary;
+        const val = Number(row.getValue("currentMarketPrice") || 0);
+        if (val <= 0 && !item.priceTrackingEnabled) {
+          return h("div", { class: "text-center text-xs text-muted-foreground" }, "-");
+        }
+        return h(
+          "div",
+          { class: "text-center font-medium text-emerald-600 dark:text-emerald-400" },
+          val > 0
+            ? h(Currency, { amount: val })
+            : h("span", { class: "text-xs italic text-muted-foreground" }, "Pending")
+        );
+      },
+    },
+    {
+      id: "totalMarketValue",
+      header: ({ column }) =>
+        h(
+          Button,
+          {
+            variant: "ghost",
+            onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
+          },
+          () => sortable(column, "items.total_market_value", "Total Value")
+        ),
+      accessorFn: (row: EntitySummary) => {
+        const unit = row.currentMarketPrice > 0 ? row.currentMarketPrice : row.purchasePrice;
+        return unit * (row.quantity || 1);
+      },
+      cell: ({ row }) => {
+        const item = row.original as EntitySummary;
+        const unit = item.currentMarketPrice > 0 ? item.currentMarketPrice : item.purchasePrice;
+        const total = unit * (item.quantity || 1);
+        if (total <= 0) {
+          return h("div", { class: "text-center text-xs text-muted-foreground" }, "-");
+        }
+        return h("div", { class: "text-center font-semibold" }, h(Currency, { amount: total }));
+      },
+    },
+    {
+      id: "gainLoss",
+      header: ({ column }) =>
+        h(
+          Button,
+          {
+            variant: "ghost",
+            onClick: () => !disableSort && column.toggleSorting(column.getIsSorted() === "asc"),
+          },
+          () => sortable(column, "items.gain_loss", "Gain / Loss")
+        ),
+      accessorFn: (row: EntitySummary) => {
+        const cost = (row.purchasePrice || 0) * (row.quantity || 1);
+        const market = (row.currentMarketPrice || 0) * (row.quantity || 1);
+        if (cost <= 0 || market <= 0) return 0;
+        return market - cost;
+      },
+      cell: ({ row }) => {
+        const item = row.original as EntitySummary;
+        const cost = (item.purchasePrice || 0) * (item.quantity || 1);
+        const market = (item.currentMarketPrice || 0) * (item.quantity || 1);
+        if (cost <= 0 || market <= 0) {
+          return h("div", { class: "text-center text-xs text-muted-foreground" }, "-");
+        }
+        const diff = market - cost;
+        const pct = (diff / cost) * 100;
+        const isPos = diff >= 0;
+        return h(
+          "div",
+          {
+            class: [
+              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold mx-auto",
+              isPos
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+            ].join(" "),
+          },
+          [
+            isPos ? "+" : "",
+            h(Currency, { amount: diff }),
+            ` (${isPos ? "+" : ""}${pct.toFixed(0)}%)`,
+          ]
+        );
+      },
     },
     {
       id: "location",

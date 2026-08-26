@@ -8,6 +8,7 @@
   import MdiLoading from "~icons/mdi/loading";
   import MdiDelete from "~icons/mdi/delete";
   import MdiPencil from "~icons/mdi/pencil";
+  import MdiCardsOutline from "~icons/mdi/cards-outline";
   import MdiContentSaveOutline from "~icons/mdi/content-save-outline";
   import MdiImageOutline from "~icons/mdi/image-outline";
   import MdiOpenInNew from "~icons/mdi/open-in-new";
@@ -531,6 +532,14 @@
     toast.info("No TCGPlayer product URL found in custom fields.");
   }
 
+  function openMtgSearchModal() {
+    openDialog(DialogID.MtgSearch, {
+      params: {
+        query: item.value?.name || "",
+      },
+    });
+  }
+
   const { query, results, isLoading, triggerSearch } = useItemSearch(api, { immediate: false });
   const parent = ref();
   // Derived location shown in the "Location" selector. Kept separate from
@@ -967,9 +976,15 @@
             <h3 class="text-lg font-medium leading-6">
               {{ $t("items.price_tracking", "Price Tracking & Market Valuation") }}
             </h3>
-            <Button size="sm" variant="outline" type="button" class="h-7 gap-1 text-xs" @click="detectAndFillTCGLink">
-              <span>{{ $t("items.detect_from_fields", "Auto-Detect from Custom Fields") }}</span>
-            </Button>
+            <div class="flex items-center gap-2">
+              <Button size="sm" variant="outline" type="button" class="h-7 gap-1 text-xs" @click="openMtgSearchModal">
+                <MdiCardsOutline class="size-3.5 text-primary" />
+                <span>{{ $t("items.search_mtg_catalog", "Search MTG Catalog") }}</span>
+              </Button>
+              <Button size="sm" variant="outline" type="button" class="h-7 gap-1 text-xs" @click="detectAndFillTCGLink">
+                <span>{{ $t("items.detect_from_fields", "Auto-Detect from Fields") }}</span>
+              </Button>
+            </div>
           </div>
           <div class="border-t sm:p-0">
             <div class="grid grid-cols-1 sm:divide-y">

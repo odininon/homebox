@@ -11,6 +11,7 @@
     <WipeInventoryDialog />
     <TagCreateModal />
     <ItemBarcodeModal />
+    <ItemMtgSearchModal />
     <AppQuickMenuModal :actions="quickMenuActions" />
     <AppScannerModal />
     <CollectionCreateModal />
@@ -291,6 +292,7 @@
   import WipeInventoryDialog from "~/components/WipeInventoryDialog.vue";
   import TagCreateModal from "~/components/Tag/CreateModal.vue";
   import ItemBarcodeModal from "~/components/Item/BarcodeModal.vue";
+  import ItemMtgSearchModal from "~/components/Item/MtgSearchModal.vue";
   import AppQuickMenuModal from "~/components/App/QuickMenuModal.vue";
   import AppScannerModal from "~/components/App/ScannerModal.vue";
   import AppLogo from "~/components/App/Logo.vue";
@@ -379,6 +381,12 @@
       name: computed(() => t("menu.create_tag")),
       shortcut: "Shift+3",
       dialogId: DialogID.CreateTag,
+    },
+    {
+      id: 3,
+      name: computed(() => t("menu.search_mtg", "Search MTG Sealed")),
+      shortcut: "Shift+4",
+      dialogId: DialogID.MtgSearch,
     },
   ];
 

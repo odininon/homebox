@@ -84,12 +84,16 @@ type (
 	}
 
 	GroupStatistics struct {
-		TotalUsers        int     `json:"totalUsers"`
-		TotalItems        int     `json:"totalItems"`
-		TotalLocations    int     `json:"totalLocations"`
-		TotalTags         int     `json:"totalTags"`
-		TotalItemPrice    float64 `json:"totalItemPrice"`
-		TotalWithWarranty int     `json:"totalWithWarranty"`
+		TotalUsers              int     `json:"totalUsers"`
+		TotalItems              int     `json:"totalItems"`
+		TotalLocations          int     `json:"totalLocations"`
+		TotalTags               int     `json:"totalTags"`
+		TotalItemPrice          float64 `json:"totalItemPrice"`
+		TotalWithWarranty       int     `json:"totalWithWarranty"`
+		TotalMarketValue        float64 `json:"totalMarketValue"`
+		TotalTrackedItems       int     `json:"totalTrackedItems"`
+		TotalTrackedCostBasis   float64 `json:"totalTrackedCostBasis"`
+		TotalTrackedMarketValue float64 `json:"totalTrackedMarketValue"`
 	}
 
 	ValueOverTimeEntry struct {
@@ -260,21 +264,56 @@ func (r *GroupRepository) StatsGroup(ctx context.Context, gid uuid.UUID) (GroupS
                     AND e.archived = false
                     AND et.is_location = false
                     AND (e.lifetime_warranty = true OR e.warranty_expires > $1)
-                ) AS total_with_warranty;
+                ) AS total_with_warranty,
+            (SELECT SUM(CASE WHEN e.current_market_price > 0 THEN e.current_market_price * e.quantity ELSE e.purchase_price * e.quantity END)
+                FROM entities e
+                JOIN entity_types et ON et.id = e.entity_type_entities
+                WHERE e.group_entities = $2 AND e.archived = false AND et.is_location = false) AS total_market_value,
+            (SELECT COUNT(*)
+                FROM entities e
+                JOIN entity_types et ON et.id = e.entity_type_entities
+                WHERE e.group_entities = $2 AND e.archived = false AND et.is_location = false AND e.price_tracking_enabled = true) AS total_tracked_items,
+            (SELECT SUM(e.purchase_price * e.quantity)
+                FROM entities e
+                JOIN entity_types et ON et.id = e.entity_type_entities
+                WHERE e.group_entities = $2 AND e.archived = false AND et.is_location = false AND e.price_tracking_enabled = true) AS total_tracked_cost_basis,
+            (SELECT SUM(e.current_market_price * e.quantity)
+                FROM entities e
+                JOIN entity_types et ON et.id = e.entity_type_entities
+                WHERE e.group_entities = $2 AND e.archived = false AND et.is_location = false AND e.price_tracking_enabled = true) AS total_tracked_market_value;
 `
 	var stats GroupStatistics
 	row := r.db.Sql().QueryRowContext(ctx, q, sqliteDateFormat(time.Now()), gid)
 
 	var maybeTotalItemPrice *float64
 	var maybeTotalWithWarranty *int
+	var maybeTotalMarketValue *float64
+	var maybeTotalTrackedItems *int
+	var maybeTotalTrackedCostBasis *float64
+	var maybeTotalTrackedMarketValue *float64
 
-	err := row.Scan(&stats.TotalUsers, &stats.TotalItems, &stats.TotalLocations, &stats.TotalTags, &maybeTotalItemPrice, &maybeTotalWithWarranty)
+	err := row.Scan(
+		&stats.TotalUsers,
+		&stats.TotalItems,
+		&stats.TotalLocations,
+		&stats.TotalTags,
+		&maybeTotalItemPrice,
+		&maybeTotalWithWarranty,
+		&maybeTotalMarketValue,
+		&maybeTotalTrackedItems,
+		&maybeTotalTrackedCostBasis,
+		&maybeTotalTrackedMarketValue,
+	)
 	if err != nil {
 		return GroupStatistics{}, err
 	}
 
 	stats.TotalItemPrice = orDefault(maybeTotalItemPrice, 0)
 	stats.TotalWithWarranty = orDefault(maybeTotalWithWarranty, 0)
+	stats.TotalMarketValue = orDefault(maybeTotalMarketValue, 0)
+	stats.TotalTrackedItems = orDefault(maybeTotalTrackedItems, 0)
+	stats.TotalTrackedCostBasis = orDefault(maybeTotalTrackedCostBasis, 0)
+	stats.TotalTrackedMarketValue = orDefault(maybeTotalTrackedMarketValue, 0)
 
 	return stats, nil
 }

@@ -10,7 +10,7 @@ type StatCard = {
 export function statCardData(api: UserClient) {
   const { t } = useI18n();
 
-  const { data: statistics } = useAsyncData(
+  const { data: statistics, refresh } = useAsyncData(
     "statistics",
     async () => {
       const { data } = await api.stats.group();
@@ -21,7 +21,7 @@ export function statCardData(api: UserClient) {
     }
   );
 
-  return computed(() => {
+  const stats = computed(() => {
     return [
       {
         label: t("home.total_value"),
@@ -45,4 +45,10 @@ export function statCardData(api: UserClient) {
       },
     ] as StatCard[];
   });
+
+  return {
+    stats,
+    statistics,
+    refresh,
+  };
 }

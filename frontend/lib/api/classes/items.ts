@@ -14,6 +14,8 @@ import type {
   PriceHistoryCreate,
   PriceHistoryEntry,
   ProductSearchResult,
+  SyncPricesBulkRequest,
+  SyncPricesResponse,
   TreeItem,
 } from "../types/data-contracts";
 import type { AttachmentTypes } from "../types/non-generated";
@@ -142,6 +144,19 @@ export class ItemPricingAPI extends BaseAPI {
   searchCatalog(query: string) {
     return this.http.get<ProductSearchResult[]>({
       url: route(`/products/search-pricing`, { q: query }),
+    });
+  }
+
+  syncAll() {
+    return this.http.post<void, SyncPricesResponse>({
+      url: route(`/entities/prices/sync-all`),
+    });
+  }
+
+  syncBulk(entityIds: string[]) {
+    return this.http.post<SyncPricesBulkRequest, SyncPricesResponse>({
+      url: route(`/entities/prices/sync-bulk`),
+      body: { entityIds },
     });
   }
 }

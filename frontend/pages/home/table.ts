@@ -21,9 +21,8 @@ export function itemsTable(api: UserClient) {
     refresh();
   });
 
-  return computed(() => {
-    return {
-      items: items.value || [],
-    };
-  });
+  return {
+    items: computed(() => items.value || []),
+    refresh,
+  };
 }

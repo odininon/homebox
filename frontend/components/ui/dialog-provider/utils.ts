@@ -7,6 +7,7 @@ import type {
   EntitySummary,
   MaintenanceEntry,
   MaintenanceEntryWithDetails,
+  ProductSearchResult,
 } from "~~/lib/api/types/data-contracts";
 
 export enum DialogID {
@@ -29,6 +30,7 @@ export enum DialogID {
   ItemTableSettings = "item-table-settings",
   PrintLabel = "print-label",
   ProductImport = "product-import",
+  MtgSearch = "mtg-search",
   QuickMenu = "quick-menu",
   Scanner = "scanner",
   PageQRCode = "page-qr-code",
@@ -63,8 +65,16 @@ export type DialogParamsMap = {
     itemId: string;
     attachmentId: string;
   };
-  [DialogID.CreateEntity]: { baseType: "item"; product?: BarcodeProduct; subItem?: true } | { baseType: "location" };
+  [DialogID.CreateEntity]:
+    | {
+        baseType: "item";
+        product?: BarcodeProduct;
+        mtgProduct?: ProductSearchResult;
+        subItem?: true;
+      }
+    | { baseType: "location" };
   [DialogID.ProductImport]?: { barcode?: string };
+  [DialogID.MtgSearch]?: { query?: string };
   [DialogID.EditMaintenance]:
     | { type: "create"; itemId: string | string[] }
     | { type: "update"; maintenanceEntry: MaintenanceEntry | MaintenanceEntryWithDetails }

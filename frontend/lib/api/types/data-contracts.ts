@@ -822,6 +822,16 @@ export interface EntityCreate {
   name: string;
   parentId?: string | null;
   quantity: number;
+  purchasePrice?: number | null;
+  purchaseFrom?: string | null;
+  purchaseDate?: string | Date | null;
+  notes?: string | null;
+  insured?: boolean | null;
+  lifetimeWarranty?: boolean | null;
+  warrantyDetails?: string | null;
+  priceTrackingEnabled?: boolean | null;
+  priceTrackingSource?: string | null;
+  priceTrackingId?: string | null;
   /** Edges */
   tagIds: string[];
 }
@@ -1162,6 +1172,18 @@ export interface GroupStatistics {
   totalTags: number;
   totalUsers: number;
   totalWithWarranty: number;
+  totalMarketValue?: number;
+  totalTrackedItems?: number;
+  totalTrackedCostBasis?: number;
+  totalTrackedMarketValue?: number;
+}
+
+export interface SyncPricesResponse {
+  updatedCount: number;
+}
+
+export interface SyncPricesBulkRequest {
+  entityIds: string[];
 }
 
 export interface GroupUpdate {

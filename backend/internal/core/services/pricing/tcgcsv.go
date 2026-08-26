@@ -10,8 +10,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -339,6 +337,21 @@ func (c *TCGCSVClient) GetPrice(ctx context.Context, productID int) (*PriceResul
 	}, nil
 }
 
+func isSealedProductName(name string) bool {
+	lower := strings.ToLower(name)
+	keywords := []string{
+		"booster", "box", "bundle", "display", "deck", "pack", "case",
+		"prerelease", "fat pack", "collector", "commander", "jumpstart",
+		"gift", "starter", "draft", "set booster", "play booster", "blister",
+	}
+	for _, kw := range keywords {
+		if strings.Contains(lower, kw) {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *TCGCSVClient) SearchProducts(ctx context.Context, query string) ([]ProductSearchResult, error) {
 	query = strings.ToLower(strings.TrimSpace(query))
 	if query == "" {
@@ -350,45 +363,127 @@ func (c *TCGCSVClient) SearchProducts(ctx context.Context, query string) ([]Prod
 		return nil, err
 	}
 
-	var results []ProductSearchResult
-	maxResults := 25
+	queryWords := strings.Fields(query)
 
-	// Check groups whose names match query or recent 15 groups
-	for _, grp := range groups {
-		if len(results) >= maxResults {
-			break
-		}
-
-		products, err := c.GetGroupProducts(ctx, grp.GroupID)
-		if err != nil {
-			log.Warn().Err(err).Int("group_id", grp.GroupID).Msg("failed to load group products for search")
-			continue
-		}
-
-		prices, _ := c.GetGroupPrices(ctx, grp.GroupID)
-		priceMap := make(map[int]float64)
-		for _, pr := range prices {
-			priceMap[pr.ProductID] = valOrZero(pr.MarketPrice)
-		}
-
-		for _, prod := range products {
-			if strings.Contains(strings.ToLower(prod.Name), query) || strings.Contains(strings.ToLower(prod.CleanName), query) {
-				results = append(results, ProductSearchResult{
-					ProductID:   prod.ProductID,
-					Name:        prod.Name,
-					CleanName:   prod.CleanName,
-					GroupName:   grp.Name,
-					GroupID:     grp.GroupID,
-					MarketPrice: priceMap[prod.ProductID],
-					ImageURL:    prod.ImageURL,
-					URL:         prod.URL,
-				})
-				if len(results) >= maxResults {
-					break
-				}
-			}
-		}
+	// Score and sort groups: prioritize groups whose names match query words
+	type scoredGroup struct {
+		group TCGGroup
+		score int
 	}
 
-	return results, nil
+	var scoredGroups []scoredGroup
+	for _, grp := range groups {
+		gName := strings.ToLower(grp.Name)
+		score := 0
+		if strings.Contains(gName, query) {
+			score += 100
+		}
+		for _, w := range queryWords {
+			if strings.Contains(gName, w) {
+				score += 10
+			}
+		}
+		scoredGroups = append(scoredGroups, scoredGroup{group: grp, score: score})
+	}
+
+	sort.Slice(scoredGroups, func(i, j int) bool {
+		if scoredGroups[i].score != scoredGroups[j].score {
+			return scoredGroups[i].score > scoredGroups[j].score
+		}
+		return scoredGroups[i].group.PublishedOn > scoredGroups[j].group.PublishedOn
+	})
+
+	// Search candidate groups (up to 40 candidate groups)
+	maxCandidateGroups := 40
+	if len(scoredGroups) > maxCandidateGroups {
+		scoredGroups = scoredGroups[:maxCandidateGroups]
+	}
+
+	type groupResult struct {
+		items []ProductSearchResult
+	}
+
+	resChan := make(chan groupResult, len(scoredGroups))
+	sem := make(chan struct{}, 8) // Limit concurrency to 8 workers
+	var wg sync.WaitGroup
+
+	for _, sg := range scoredGroups {
+		wg.Add(1)
+		go func(grp TCGGroup) {
+			defer wg.Done()
+			select {
+			case sem <- struct{}{}:
+				defer func() { <-sem }()
+			case <-ctx.Done():
+				return
+			}
+
+			products, err := c.GetGroupProducts(ctx, grp.GroupID)
+			if err != nil {
+				return
+			}
+
+			prices, _ := c.GetGroupPrices(ctx, grp.GroupID)
+			priceMap := make(map[int]float64, len(prices))
+			for _, pr := range prices {
+				priceMap[pr.ProductID] = valOrZero(pr.MarketPrice)
+			}
+
+			var matches []ProductSearchResult
+			for _, prod := range products {
+				pName := strings.ToLower(prod.Name)
+				pClean := strings.ToLower(prod.CleanName)
+
+				allMatch := true
+				for _, w := range queryWords {
+					if !strings.Contains(pName, w) && !strings.Contains(pClean, w) && !strings.Contains(strings.ToLower(grp.Name), w) {
+						allMatch = false
+						break
+					}
+				}
+
+				if allMatch || strings.Contains(pName, query) || strings.Contains(pClean, query) {
+					matches = append(matches, ProductSearchResult{
+						ProductID:   prod.ProductID,
+						Name:        prod.Name,
+						CleanName:   prod.CleanName,
+						GroupName:   grp.Name,
+						GroupID:     grp.GroupID,
+						MarketPrice: priceMap[prod.ProductID],
+						ImageURL:    prod.ImageURL,
+						URL:         prod.URL,
+					})
+				}
+			}
+
+			if len(matches) > 0 {
+				resChan <- groupResult{items: matches}
+			}
+		}(sg.group)
+	}
+
+	wg.Wait()
+	close(resChan)
+
+	var allResults []ProductSearchResult
+	for gr := range resChan {
+		allResults = append(allResults, gr.items...)
+	}
+
+	// Sort results: prioritize sealed products, then products matching query closest
+	sort.Slice(allResults, func(i, j int) bool {
+		iSealed := isSealedProductName(allResults[i].Name)
+		jSealed := isSealedProductName(allResults[j].Name)
+		if iSealed != jSealed {
+			return iSealed
+		}
+		return allResults[i].MarketPrice > allResults[j].MarketPrice
+	})
+
+	maxResults := 50
+	if len(allResults) > maxResults {
+		allResults = allResults[:maxResults]
+	}
+
+	return allResults, nil
 }

@@ -24,6 +24,17 @@
             </TooltipContent>
           </Tooltip>
 
+          <Tooltip v-if="!selectedEntityType?.isLocation">
+            <TooltipTrigger>
+              <Button variant="outline" :disabled="loading" size="icon" @click="openMtgSearchDialog()">
+                <MdiCardsOutline class="size-5 text-primary" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{{ $t("components.item.mtg_search.button_tooltip", "Search MTG Sealed Products") }}</p>
+            </TooltipContent>
+          </Tooltip>
+
           <ButtonGroup>
             <Tooltip>
               <TooltipTrigger>
@@ -240,6 +251,7 @@
   import { useLocationStore } from "~~/stores/locations";
   import MdiBarcode from "~icons/mdi/barcode";
   import MdiBarcodeScan from "~icons/mdi/barcode-scan";
+  import MdiCardsOutline from "~icons/mdi/cards-outline";
   import MdiPackageVariant from "~icons/mdi/package-variant";
   import MdiPackageVariantClosed from "~icons/mdi/package-variant-closed";
   import MdiFileDocumentOutline from "~icons/mdi/file-document-outline";
@@ -374,9 +386,13 @@
     quantity: 1,
     description: "",
     color: "",
-    // Populated by the barcode product-import flow; passed through on create (#1578).
+    // Populated by barcode or MTG sealed import flows
     manufacturer: "",
     modelNumber: "",
+    purchasePrice: 0,
+    priceTrackingEnabled: false,
+    priceTrackingSource: "tcgplayer",
+    priceTrackingId: "",
     tags: [] as string[],
     photos: [] as PhotoPreview[],
   });
@@ -542,7 +558,56 @@
           }
         }
 
-        if (params.product) {
+        if (params.mtgProduct) {
+          form.name = params.mtgProduct.name;
+          form.description = `MTG Sealed Product\nSet: ${params.mtgProduct.groupName}`;
+          form.manufacturer = "Wizards of the Coast";
+          form.modelNumber = "";
+          form.priceTrackingEnabled = true;
+          form.priceTrackingSource = "tcgplayer";
+          form.priceTrackingId = String(params.mtgProduct.productId);
+          if (params.mtgProduct.marketPrice > 0) {
+            form.purchasePrice = params.mtgProduct.marketPrice;
+          }
+
+          // Auto-match set tag if it exists
+          if (params.mtgProduct.groupName) {
+            const foundTag = tags.value.find(
+              t => t.name.toLowerCase() === params.mtgProduct!.groupName.toLowerCase()
+            );
+            if (foundTag) {
+              form.tags = [foundTag.id];
+            }
+          }
+
+          // Fetch box art image and attach
+          if (params.mtgProduct.imageUrl) {
+            try {
+              const res = await fetch(params.mtgProduct.imageUrl);
+              if (res.ok) {
+                const blob = await res.blob();
+                const file = new File([blob], `${params.mtgProduct.productId}_box.jpg`, {
+                  type: blob.type || "image/jpeg",
+                });
+                const base64 = await new Promise<string>(resolve => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.readAsDataURL(blob);
+                });
+                appendPhotos([
+                  {
+                    photoName: `${params.mtgProduct.productId}_box.jpg`,
+                    fileBase64: base64,
+                    primary: form.photos.length === 0,
+                    file: file,
+                  },
+                ]);
+              }
+            } catch (err) {
+              console.warn("Failed to load product image from URL", err);
+            }
+          }
+        } else if (params.product) {
           form.name = params.product.item.name;
           form.description = params.product.item.description;
           // Carry the looked-up identifications into the create payload so the
@@ -653,6 +718,10 @@
         description: form.description,
         manufacturer: form.manufacturer,
         modelNumber: form.modelNumber,
+        purchasePrice: form.purchasePrice,
+        priceTrackingEnabled: form.priceTrackingEnabled,
+        priceTrackingSource: form.priceTrackingSource,
+        priceTrackingId: form.priceTrackingId,
         tagIds: form.tags,
         entityTypeId: selectedEntityType.value?.id || "",
       };
@@ -709,6 +778,10 @@
     form.color = "";
     form.manufacturer = "";
     form.modelNumber = "";
+    form.purchasePrice = 0;
+    form.priceTrackingEnabled = false;
+    form.priceTrackingSource = "tcgplayer";
+    form.priceTrackingId = "";
     form.photos = [];
     form.tags = [];
     selectedTemplate.value = null;
@@ -739,5 +812,9 @@
 
   function openBarcodeDialog() {
     openDialog(DialogID.ProductImport);
+  }
+
+  function openMtgSearchDialog() {
+    openDialog(DialogID.MtgSearch);
   }
 </script>

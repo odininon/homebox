@@ -101,6 +101,18 @@ type (
 		ModelNumber  string `json:"modelNumber"  validate:"max=255" extensions:"x-nullable,x-omitempty"`
 		Manufacturer string `json:"manufacturer" validate:"max=255" extensions:"x-nullable,x-omitempty"`
 
+		// Additional fields
+		Notes                string     `json:"notes" validate:"max=1000"`
+		Insured              bool       `json:"insured"`
+		LifetimeWarranty     bool       `json:"lifetimeWarranty"`
+		WarrantyDetails      string     `json:"warrantyDetails"`
+		PurchaseFrom         string     `json:"purchaseFrom" validate:"max=255"`
+		PurchasePrice        float64    `json:"purchasePrice"`
+		PurchaseDate         types.Date `json:"purchaseDate"`
+		PriceTrackingEnabled bool       `json:"priceTrackingEnabled"`
+		PriceTrackingSource  string     `json:"priceTrackingSource" validate:"max=255"`
+		PriceTrackingID      string     `json:"priceTrackingId" validate:"max=255"`
+
 		// Edges
 		TagIDs []uuid.UUID `json:"tagIds"`
 	}
@@ -1103,7 +1115,20 @@ func (r *EntityRepository) Create(ctx context.Context, gid uuid.UUID, data Entit
 		SetModelNumber(data.ModelNumber).
 		SetManufacturer(data.Manufacturer).
 		SetGroupID(gid).
-		SetAssetID(int64(data.AssetID))
+		SetAssetID(int64(data.AssetID)).
+		SetNotes(data.Notes).
+		SetInsured(data.Insured).
+		SetLifetimeWarranty(data.LifetimeWarranty).
+		SetWarrantyDetails(data.WarrantyDetails).
+		SetPurchaseFrom(data.PurchaseFrom).
+		SetPurchasePrice(data.PurchasePrice).
+		SetPriceTrackingEnabled(data.PriceTrackingEnabled).
+		SetPriceTrackingSource(data.PriceTrackingSource).
+		SetPriceTrackingID(data.PriceTrackingID)
+
+	if t := data.PurchaseDate.Time(); !t.IsZero() {
+		q.SetPurchaseDate(t)
+	}
 
 	if data.ParentID != uuid.Nil {
 		q.SetParentID(data.ParentID)

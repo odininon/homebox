@@ -12,6 +12,7 @@
   import LocationCard from "~/components/Location/Card.vue";
   import TagChip from "~/components/Tag/Chip.vue";
   import Table from "~/components/Item/View/Table.vue";
+  import PortfolioValuationCard from "~/components/Home/PortfolioValuationCard.vue";
 
   const { t } = useI18n();
 
@@ -31,13 +32,20 @@
   const tagsStore = useTagStore();
   const tags = computed(() => tagsStore.tags);
 
-  const itemTable = itemsTable(api);
-  const stats = statCardData(api);
+  const { items: homeItems, refresh: refreshItems } = itemsTable(api);
+  const { stats, statistics, refresh: refreshStats } = statCardData(api);
+
+  function handlePortfolioRefresh() {
+    refreshStats();
+    refreshItems();
+  }
 </script>
 
 <template>
   <div>
     <BaseContainer class="flex flex-col gap-4">
+      <PortfolioValuationCard :stats="statistics" @refresh="handlePortfolioRefresh" />
+
       <section>
         <Subtitle> {{ $t("home.quick_statistics") }} </Subtitle>
         <div class="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-6">
@@ -48,12 +56,12 @@
       <section>
         <Subtitle> {{ $t("home.recently_added") }} </Subtitle>
 
-        <p v-if="itemTable.items.length === 0" class="ml-2 text-sm">{{ $t("items.no_results") }}</p>
+        <p v-if="homeItems.length === 0" class="ml-2 text-sm">{{ $t("items.no_results") }}</p>
         <BaseCard v-else-if="breakpoints.lg">
-          <Table :items="itemTable.items" />
+          <Table :items="homeItems" />
         </BaseCard>
         <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <ItemCard v-for="item in itemTable.items" :key="item.id" :item="item" />
+          <ItemCard v-for="item in homeItems" :key="item.id" :item="item" />
         </div>
       </section>
 

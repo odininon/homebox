@@ -225,11 +225,14 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.Post("/entities/{id}/maintenance", chain.ToHandlerFunc(v1Ctrl.HandleMaintenanceEntryCreate(), userMW...))
 
 		// Entity price history & tracking endpoints
+		r.Post("/entities/prices/sync-all", chain.ToHandlerFunc(v1Ctrl.HandleItemPricesSyncAll(), userMW...))
+		r.Post("/entities/prices/sync-bulk", chain.ToHandlerFunc(v1Ctrl.HandleItemPricesSyncBulk(), userMW...))
 		r.Get("/entities/{id}/prices", chain.ToHandlerFunc(v1Ctrl.HandleItemPricesGet(), userMW...))
 		r.Post("/entities/{id}/prices", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceCreate(), userMW...))
 		r.Post("/entities/{id}/prices/sync", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceSync(), userMW...))
 		r.Post("/entities/{id}/prices/auto-detect", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceAutoDetect(), userMW...))
 		r.Delete("/entities/{id}/prices/{price_id}", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceDelete(), userMW...))
+
 
 		r.Get("/assets/{id}", chain.ToHandlerFunc(v1Ctrl.HandleAssetGet(), userMW...))
 
