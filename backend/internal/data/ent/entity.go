@@ -68,6 +68,16 @@ type Entity struct {
 	SoldPrice float64 `json:"sold_price,omitempty"`
 	// SoldNotes holds the value of the "sold_notes" field.
 	SoldNotes string `json:"sold_notes,omitempty"`
+	// CurrentMarketPrice holds the value of the "current_market_price" field.
+	CurrentMarketPrice float64 `json:"current_market_price,omitempty"`
+	// LastPriceSyncAt holds the value of the "last_price_sync_at" field.
+	LastPriceSyncAt time.Time `json:"last_price_sync_at,omitempty"`
+	// PriceTrackingEnabled holds the value of the "price_tracking_enabled" field.
+	PriceTrackingEnabled bool `json:"price_tracking_enabled,omitempty"`
+	// PriceTrackingSource holds the value of the "price_tracking_source" field.
+	PriceTrackingSource string `json:"price_tracking_source,omitempty"`
+	// PriceTrackingID holds the value of the "price_tracking_id" field.
+	PriceTrackingID string `json:"price_tracking_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EntityQuery when eager-loading is set.
 	Edges                EntityEdges `json:"edges"`
@@ -95,9 +105,11 @@ type EntityEdges struct {
 	MaintenanceEntries []*MaintenanceEntry `json:"maintenance_entries,omitempty"`
 	// Attachments holds the value of the attachments edge.
 	Attachments []*Attachment `json:"attachments,omitempty"`
+	// PriceHistory holds the value of the price_history edge.
+	PriceHistory []*EntityPriceHistory `json:"price_history,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [9]bool
 }
 
 // GroupOrErr returns the Group value or an error if the edge
@@ -178,20 +190,29 @@ func (e EntityEdges) AttachmentsOrErr() ([]*Attachment, error) {
 	return nil, &NotLoadedError{edge: "attachments"}
 }
 
+// PriceHistoryOrErr returns the PriceHistory value or an error if the edge
+// was not loaded in eager-loading.
+func (e EntityEdges) PriceHistoryOrErr() ([]*EntityPriceHistory, error) {
+	if e.loadedTypes[8] {
+		return e.PriceHistory, nil
+	}
+	return nil, &NotLoadedError{edge: "price_history"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Entity) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case entity.FieldInsured, entity.FieldArchived, entity.FieldSyncChildEntityLocations, entity.FieldLifetimeWarranty:
+		case entity.FieldInsured, entity.FieldArchived, entity.FieldSyncChildEntityLocations, entity.FieldLifetimeWarranty, entity.FieldPriceTrackingEnabled:
 			values[i] = new(sql.NullBool)
-		case entity.FieldQuantity, entity.FieldPurchasePrice, entity.FieldSoldPrice:
+		case entity.FieldQuantity, entity.FieldPurchasePrice, entity.FieldSoldPrice, entity.FieldCurrentMarketPrice:
 			values[i] = new(sql.NullFloat64)
 		case entity.FieldAssetID:
 			values[i] = new(sql.NullInt64)
-		case entity.FieldName, entity.FieldDescription, entity.FieldImportRef, entity.FieldNotes, entity.FieldSerialNumber, entity.FieldModelNumber, entity.FieldManufacturer, entity.FieldWarrantyDetails, entity.FieldPurchaseFrom, entity.FieldSoldTo, entity.FieldSoldNotes:
+		case entity.FieldName, entity.FieldDescription, entity.FieldImportRef, entity.FieldNotes, entity.FieldSerialNumber, entity.FieldModelNumber, entity.FieldManufacturer, entity.FieldWarrantyDetails, entity.FieldPurchaseFrom, entity.FieldSoldTo, entity.FieldSoldNotes, entity.FieldPriceTrackingSource, entity.FieldPriceTrackingID:
 			values[i] = new(sql.NullString)
-		case entity.FieldCreatedAt, entity.FieldUpdatedAt, entity.FieldWarrantyExpires, entity.FieldPurchaseDate, entity.FieldSoldDate:
+		case entity.FieldCreatedAt, entity.FieldUpdatedAt, entity.FieldWarrantyExpires, entity.FieldPurchaseDate, entity.FieldSoldDate, entity.FieldLastPriceSyncAt:
 			values[i] = new(sql.NullTime)
 		case entity.FieldID:
 			values[i] = new(uuid.UUID)
@@ -366,6 +387,36 @@ func (_m *Entity) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.SoldNotes = value.String
 			}
+		case entity.FieldCurrentMarketPrice:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field current_market_price", values[i])
+			} else if value.Valid {
+				_m.CurrentMarketPrice = value.Float64
+			}
+		case entity.FieldLastPriceSyncAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_price_sync_at", values[i])
+			} else if value.Valid {
+				_m.LastPriceSyncAt = value.Time
+			}
+		case entity.FieldPriceTrackingEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field price_tracking_enabled", values[i])
+			} else if value.Valid {
+				_m.PriceTrackingEnabled = value.Bool
+			}
+		case entity.FieldPriceTrackingSource:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field price_tracking_source", values[i])
+			} else if value.Valid {
+				_m.PriceTrackingSource = value.String
+			}
+		case entity.FieldPriceTrackingID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field price_tracking_id", values[i])
+			} else if value.Valid {
+				_m.PriceTrackingID = value.String
+			}
 		case entity.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field entity_children", values[i])
@@ -438,6 +489,11 @@ func (_m *Entity) QueryMaintenanceEntries() *MaintenanceEntryQuery {
 // QueryAttachments queries the "attachments" edge of the Entity entity.
 func (_m *Entity) QueryAttachments() *AttachmentQuery {
 	return NewEntityClient(_m.config).QueryAttachments(_m)
+}
+
+// QueryPriceHistory queries the "price_history" edge of the Entity entity.
+func (_m *Entity) QueryPriceHistory() *EntityPriceHistoryQuery {
+	return NewEntityClient(_m.config).QueryPriceHistory(_m)
 }
 
 // Update returns a builder for updating this Entity.
@@ -534,6 +590,21 @@ func (_m *Entity) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("sold_notes=")
 	builder.WriteString(_m.SoldNotes)
+	builder.WriteString(", ")
+	builder.WriteString("current_market_price=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CurrentMarketPrice))
+	builder.WriteString(", ")
+	builder.WriteString("last_price_sync_at=")
+	builder.WriteString(_m.LastPriceSyncAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("price_tracking_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", _m.PriceTrackingEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("price_tracking_source=")
+	builder.WriteString(_m.PriceTrackingSource)
+	builder.WriteString(", ")
+	builder.WriteString("price_tracking_id=")
+	builder.WriteString(_m.PriceTrackingID)
 	builder.WriteByte(')')
 	return builder.String()
 }

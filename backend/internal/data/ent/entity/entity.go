@@ -63,6 +63,16 @@ const (
 	FieldSoldPrice = "sold_price"
 	// FieldSoldNotes holds the string denoting the sold_notes field in the database.
 	FieldSoldNotes = "sold_notes"
+	// FieldCurrentMarketPrice holds the string denoting the current_market_price field in the database.
+	FieldCurrentMarketPrice = "current_market_price"
+	// FieldLastPriceSyncAt holds the string denoting the last_price_sync_at field in the database.
+	FieldLastPriceSyncAt = "last_price_sync_at"
+	// FieldPriceTrackingEnabled holds the string denoting the price_tracking_enabled field in the database.
+	FieldPriceTrackingEnabled = "price_tracking_enabled"
+	// FieldPriceTrackingSource holds the string denoting the price_tracking_source field in the database.
+	FieldPriceTrackingSource = "price_tracking_source"
+	// FieldPriceTrackingID holds the string denoting the price_tracking_id field in the database.
+	FieldPriceTrackingID = "price_tracking_id"
 	// EdgeGroup holds the string denoting the group edge name in mutations.
 	EdgeGroup = "group"
 	// EdgeParent holds the string denoting the parent edge name in mutations.
@@ -79,6 +89,8 @@ const (
 	EdgeMaintenanceEntries = "maintenance_entries"
 	// EdgeAttachments holds the string denoting the attachments edge name in mutations.
 	EdgeAttachments = "attachments"
+	// EdgePriceHistory holds the string denoting the price_history edge name in mutations.
+	EdgePriceHistory = "price_history"
 	// Table holds the table name of the entity in the database.
 	Table = "entities"
 	// GroupTable is the table that holds the group relation/edge.
@@ -129,6 +141,13 @@ const (
 	AttachmentsInverseTable = "attachments"
 	// AttachmentsColumn is the table column denoting the attachments relation/edge.
 	AttachmentsColumn = "entity_attachments"
+	// PriceHistoryTable is the table that holds the price_history relation/edge.
+	PriceHistoryTable = "entity_price_histories"
+	// PriceHistoryInverseTable is the table name for the EntityPriceHistory entity.
+	// It exists in this package in order to avoid circular dependency with the "entitypricehistory" package.
+	PriceHistoryInverseTable = "entity_price_histories"
+	// PriceHistoryColumn is the table column denoting the price_history relation/edge.
+	PriceHistoryColumn = "entity_id"
 )
 
 // Columns holds all SQL columns for entity fields.
@@ -158,6 +177,11 @@ var Columns = []string{
 	FieldSoldTo,
 	FieldSoldPrice,
 	FieldSoldNotes,
+	FieldCurrentMarketPrice,
+	FieldLastPriceSyncAt,
+	FieldPriceTrackingEnabled,
+	FieldPriceTrackingSource,
+	FieldPriceTrackingID,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "entities"
@@ -230,6 +254,16 @@ var (
 	DefaultSoldPrice float64
 	// SoldNotesValidator is a validator for the "sold_notes" field. It is called by the builders before save.
 	SoldNotesValidator func(string) error
+	// DefaultCurrentMarketPrice holds the default value on creation for the "current_market_price" field.
+	DefaultCurrentMarketPrice float64
+	// DefaultPriceTrackingEnabled holds the default value on creation for the "price_tracking_enabled" field.
+	DefaultPriceTrackingEnabled bool
+	// DefaultPriceTrackingSource holds the default value on creation for the "price_tracking_source" field.
+	DefaultPriceTrackingSource string
+	// PriceTrackingSourceValidator is a validator for the "price_tracking_source" field. It is called by the builders before save.
+	PriceTrackingSourceValidator func(string) error
+	// PriceTrackingIDValidator is a validator for the "price_tracking_id" field. It is called by the builders before save.
+	PriceTrackingIDValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -362,6 +396,31 @@ func BySoldNotes(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSoldNotes, opts...).ToFunc()
 }
 
+// ByCurrentMarketPrice orders the results by the current_market_price field.
+func ByCurrentMarketPrice(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCurrentMarketPrice, opts...).ToFunc()
+}
+
+// ByLastPriceSyncAt orders the results by the last_price_sync_at field.
+func ByLastPriceSyncAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastPriceSyncAt, opts...).ToFunc()
+}
+
+// ByPriceTrackingEnabled orders the results by the price_tracking_enabled field.
+func ByPriceTrackingEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPriceTrackingEnabled, opts...).ToFunc()
+}
+
+// ByPriceTrackingSource orders the results by the price_tracking_source field.
+func ByPriceTrackingSource(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPriceTrackingSource, opts...).ToFunc()
+}
+
+// ByPriceTrackingID orders the results by the price_tracking_id field.
+func ByPriceTrackingID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPriceTrackingID, opts...).ToFunc()
+}
+
 // ByGroupField orders the results by group field.
 func ByGroupField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -452,6 +511,20 @@ func ByAttachments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAttachmentsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPriceHistoryCount orders the results by price_history count.
+func ByPriceHistoryCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPriceHistoryStep(), opts...)
+	}
+}
+
+// ByPriceHistory orders the results by price_history terms.
+func ByPriceHistory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPriceHistoryStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newGroupStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -506,5 +579,12 @@ func newAttachmentsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AttachmentsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AttachmentsTable, AttachmentsColumn),
+	)
+}
+func newPriceHistoryStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PriceHistoryInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PriceHistoryTable, PriceHistoryColumn),
 	)
 }

@@ -1022,6 +1022,182 @@
                 }
             }
         },
+        "/v1/entities/{id}/prices": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Get Item Price History",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/repo.PriceHistoryEntry"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Create Manual Price Snapshot",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Price Data",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/repo.PriceHistoryCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/repo.PriceHistoryEntry"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/entities/{id}/prices/auto-detect": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Auto-detect TCGPlayer Link from Custom Fields and Enable Tracking",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/repo.EntityOut"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/entities/{id}/prices/sync": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Sync Item Price From TCGPlayer/Market",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/repo.PriceHistoryEntry"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/entities/{id}/prices/{price_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Delete Price Snapshot",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Price Snapshot ID",
+                        "name": "price_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
         "/v1/entity-types": {
             "get": {
                 "security": [
@@ -2175,6 +2351,42 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/repo.BarcodeProduct"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/products/search-pricing": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Search Products in TCG Catalog",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/pricing.ProductSearchResult"
                             }
                         }
                     }
@@ -3484,6 +3696,10 @@
                     "description": "CreatedAt holds the value of the \"created_at\" field.",
                     "type": "string"
                 },
+                "current_market_price": {
+                    "description": "CurrentMarketPrice holds the value of the \"current_market_price\" field.",
+                    "type": "number"
+                },
                 "description": {
                     "description": "Description holds the value of the \"description\" field.",
                     "type": "string"
@@ -3508,6 +3724,10 @@
                     "description": "Insured holds the value of the \"insured\" field.",
                     "type": "boolean"
                 },
+                "last_price_sync_at": {
+                    "description": "LastPriceSyncAt holds the value of the \"last_price_sync_at\" field.",
+                    "type": "string"
+                },
                 "lifetime_warranty": {
                     "description": "LifetimeWarranty holds the value of the \"lifetime_warranty\" field.",
                     "type": "boolean"
@@ -3526,6 +3746,18 @@
                 },
                 "notes": {
                     "description": "Notes holds the value of the \"notes\" field.",
+                    "type": "string"
+                },
+                "price_tracking_enabled": {
+                    "description": "PriceTrackingEnabled holds the value of the \"price_tracking_enabled\" field.",
+                    "type": "boolean"
+                },
+                "price_tracking_id": {
+                    "description": "PriceTrackingID holds the value of the \"price_tracking_id\" field.",
+                    "type": "string"
+                },
+                "price_tracking_source": {
+                    "description": "PriceTrackingSource holds the value of the \"price_tracking_source\" field.",
                     "type": "string"
                 },
                 "purchase_date": {
@@ -3637,6 +3869,13 @@
                         }
                     ]
                 },
+                "price_history": {
+                    "description": "PriceHistory holds the value of the price_history edge.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.EntityPriceHistory"
+                    }
+                },
                 "tag": {
                     "description": "Tag holds the value of the tag edge.",
                     "type": "array",
@@ -3704,6 +3943,84 @@
             }
         },
         "ent.EntityFieldEdges": {
+            "type": "object",
+            "properties": {
+                "entity": {
+                    "description": "Entity holds the value of the entity edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.Entity"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.EntityPriceHistory": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "CreatedAt holds the value of the \"created_at\" field.",
+                    "type": "string"
+                },
+                "direct_low": {
+                    "description": "DirectLow holds the value of the \"direct_low\" field.",
+                    "type": "number"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the EntityPriceHistoryQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.EntityPriceHistoryEdges"
+                        }
+                    ]
+                },
+                "entity_id": {
+                    "description": "EntityID holds the value of the \"entity_id\" field.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "string"
+                },
+                "market_high": {
+                    "description": "MarketHigh holds the value of the \"market_high\" field.",
+                    "type": "number"
+                },
+                "market_low": {
+                    "description": "MarketLow holds the value of the \"market_low\" field.",
+                    "type": "number"
+                },
+                "market_mid": {
+                    "description": "MarketMid holds the value of the \"market_mid\" field.",
+                    "type": "number"
+                },
+                "notes": {
+                    "description": "Notes holds the value of the \"notes\" field.",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "Price holds the value of the \"price\" field.",
+                    "type": "number"
+                },
+                "recorded_at": {
+                    "description": "RecordedAt holds the value of the \"recorded_at\" field.",
+                    "type": "string"
+                },
+                "source": {
+                    "description": "Source holds the value of the \"source\" field.",
+                    "type": "string"
+                },
+                "source_id": {
+                    "description": "SourceID holds the value of the \"source_id\" field.",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
+                    "type": "string"
+                }
+            }
+        },
+        "ent.EntityPriceHistoryEdges": {
             "type": "object",
             "properties": {
                 "entity": {
@@ -4660,6 +4977,35 @@
                 "StatusFailed"
             ]
         },
+        "pricing.ProductSearchResult": {
+            "type": "object",
+            "properties": {
+                "cleanName": {
+                    "type": "string"
+                },
+                "groupId": {
+                    "type": "integer"
+                },
+                "groupName": {
+                    "type": "string"
+                },
+                "imageUrl": {
+                    "type": "string"
+                },
+                "marketPrice": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "productId": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "repo.APIKeyCreate": {
             "type": "object",
             "required": [
@@ -4897,6 +5243,10 @@
                 "createdAt": {
                     "type": "string"
                 },
+                "currentMarketPrice": {
+                    "description": "Price Tracking",
+                    "type": "number"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -4929,6 +5279,11 @@
                 "itemCount": {
                     "description": "Container-specific (populated when querying locations)",
                     "type": "number"
+                },
+                "lastPriceSyncAt": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "x-omitempty": true
                 },
                 "lifetimeWarranty": {
                     "description": "Warranty",
@@ -4966,6 +5321,15 @@
                     ],
                     "x-nullable": true,
                     "x-omitempty": true
+                },
+                "priceTrackingEnabled": {
+                    "type": "boolean"
+                },
+                "priceTrackingId": {
+                    "type": "string"
+                },
+                "priceTrackingSource": {
+                    "type": "string"
                 },
                 "purchaseDate": {
                     "description": "Purchase",
@@ -5093,6 +5457,10 @@
                 "createdAt": {
                     "type": "string"
                 },
+                "currentMarketPrice": {
+                    "description": "Price Tracking",
+                    "type": "number"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -5132,6 +5500,9 @@
                     ],
                     "x-nullable": true,
                     "x-omitempty": true
+                },
+                "priceTrackingEnabled": {
+                    "type": "boolean"
                 },
                 "purchasePrice": {
                     "type": "number"
@@ -5514,6 +5885,9 @@
                 "assetId": {
                     "type": "string"
                 },
+                "currentMarketPrice": {
+                    "type": "number"
+                },
                 "description": {
                     "type": "string",
                     "maxLength": 1000
@@ -5556,6 +5930,16 @@
                     "type": "string",
                     "x-nullable": true,
                     "x-omitempty": true
+                },
+                "priceTrackingEnabled": {
+                    "description": "Price Tracking",
+                    "type": "boolean"
+                },
+                "priceTrackingId": {
+                    "type": "string"
+                },
+                "priceTrackingSource": {
+                    "type": "string"
                 },
                 "purchaseDate": {
                     "description": "Purchase",
@@ -5962,6 +6346,79 @@
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "repo.PriceHistoryCreate": {
+            "type": "object",
+            "properties": {
+                "directLow": {
+                    "type": "number"
+                },
+                "marketHigh": {
+                    "type": "number"
+                },
+                "marketLow": {
+                    "type": "number"
+                },
+                "marketMid": {
+                    "type": "number"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "recordedAt": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "sourceId": {
+                    "type": "string"
+                }
+            }
+        },
+        "repo.PriceHistoryEntry": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "directLow": {
+                    "type": "number"
+                },
+                "entityId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "marketHigh": {
+                    "type": "number"
+                },
+                "marketLow": {
+                    "type": "number"
+                },
+                "marketMid": {
+                    "type": "number"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "recordedAt": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "sourceId": {
+                    "type": "string"
                 }
             }
         },

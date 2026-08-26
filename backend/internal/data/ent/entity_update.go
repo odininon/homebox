@@ -15,6 +15,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/attachment"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entityfield"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitypricehistory"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/group"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/maintenanceentry"
@@ -455,6 +456,101 @@ func (_u *EntityUpdate) ClearSoldNotes() *EntityUpdate {
 	return _u
 }
 
+// SetCurrentMarketPrice sets the "current_market_price" field.
+func (_u *EntityUpdate) SetCurrentMarketPrice(v float64) *EntityUpdate {
+	_u.mutation.ResetCurrentMarketPrice()
+	_u.mutation.SetCurrentMarketPrice(v)
+	return _u
+}
+
+// SetNillableCurrentMarketPrice sets the "current_market_price" field if the given value is not nil.
+func (_u *EntityUpdate) SetNillableCurrentMarketPrice(v *float64) *EntityUpdate {
+	if v != nil {
+		_u.SetCurrentMarketPrice(*v)
+	}
+	return _u
+}
+
+// AddCurrentMarketPrice adds value to the "current_market_price" field.
+func (_u *EntityUpdate) AddCurrentMarketPrice(v float64) *EntityUpdate {
+	_u.mutation.AddCurrentMarketPrice(v)
+	return _u
+}
+
+// SetLastPriceSyncAt sets the "last_price_sync_at" field.
+func (_u *EntityUpdate) SetLastPriceSyncAt(v time.Time) *EntityUpdate {
+	_u.mutation.SetLastPriceSyncAt(v)
+	return _u
+}
+
+// SetNillableLastPriceSyncAt sets the "last_price_sync_at" field if the given value is not nil.
+func (_u *EntityUpdate) SetNillableLastPriceSyncAt(v *time.Time) *EntityUpdate {
+	if v != nil {
+		_u.SetLastPriceSyncAt(*v)
+	}
+	return _u
+}
+
+// ClearLastPriceSyncAt clears the value of the "last_price_sync_at" field.
+func (_u *EntityUpdate) ClearLastPriceSyncAt() *EntityUpdate {
+	_u.mutation.ClearLastPriceSyncAt()
+	return _u
+}
+
+// SetPriceTrackingEnabled sets the "price_tracking_enabled" field.
+func (_u *EntityUpdate) SetPriceTrackingEnabled(v bool) *EntityUpdate {
+	_u.mutation.SetPriceTrackingEnabled(v)
+	return _u
+}
+
+// SetNillablePriceTrackingEnabled sets the "price_tracking_enabled" field if the given value is not nil.
+func (_u *EntityUpdate) SetNillablePriceTrackingEnabled(v *bool) *EntityUpdate {
+	if v != nil {
+		_u.SetPriceTrackingEnabled(*v)
+	}
+	return _u
+}
+
+// SetPriceTrackingSource sets the "price_tracking_source" field.
+func (_u *EntityUpdate) SetPriceTrackingSource(v string) *EntityUpdate {
+	_u.mutation.SetPriceTrackingSource(v)
+	return _u
+}
+
+// SetNillablePriceTrackingSource sets the "price_tracking_source" field if the given value is not nil.
+func (_u *EntityUpdate) SetNillablePriceTrackingSource(v *string) *EntityUpdate {
+	if v != nil {
+		_u.SetPriceTrackingSource(*v)
+	}
+	return _u
+}
+
+// ClearPriceTrackingSource clears the value of the "price_tracking_source" field.
+func (_u *EntityUpdate) ClearPriceTrackingSource() *EntityUpdate {
+	_u.mutation.ClearPriceTrackingSource()
+	return _u
+}
+
+// SetPriceTrackingID sets the "price_tracking_id" field.
+func (_u *EntityUpdate) SetPriceTrackingID(v string) *EntityUpdate {
+	_u.mutation.SetPriceTrackingID(v)
+	return _u
+}
+
+// SetNillablePriceTrackingID sets the "price_tracking_id" field if the given value is not nil.
+func (_u *EntityUpdate) SetNillablePriceTrackingID(v *string) *EntityUpdate {
+	if v != nil {
+		_u.SetPriceTrackingID(*v)
+	}
+	return _u
+}
+
+// ClearPriceTrackingID clears the value of the "price_tracking_id" field.
+func (_u *EntityUpdate) ClearPriceTrackingID() *EntityUpdate {
+	_u.mutation.ClearPriceTrackingID()
+	return _u
+}
+
 // SetGroupID sets the "group" edge to the Group entity by ID.
 func (_u *EntityUpdate) SetGroupID(id uuid.UUID) *EntityUpdate {
 	_u.mutation.SetGroupID(id)
@@ -569,6 +665,21 @@ func (_u *EntityUpdate) AddAttachments(v ...*Attachment) *EntityUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddAttachmentIDs(ids...)
+}
+
+// AddPriceHistoryIDs adds the "price_history" edge to the EntityPriceHistory entity by IDs.
+func (_u *EntityUpdate) AddPriceHistoryIDs(ids ...uuid.UUID) *EntityUpdate {
+	_u.mutation.AddPriceHistoryIDs(ids...)
+	return _u
+}
+
+// AddPriceHistory adds the "price_history" edges to the EntityPriceHistory entity.
+func (_u *EntityUpdate) AddPriceHistory(v ...*EntityPriceHistory) *EntityUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPriceHistoryIDs(ids...)
 }
 
 // Mutation returns the EntityMutation object of the builder.
@@ -699,6 +810,27 @@ func (_u *EntityUpdate) RemoveAttachments(v ...*Attachment) *EntityUpdate {
 	return _u.RemoveAttachmentIDs(ids...)
 }
 
+// ClearPriceHistory clears all "price_history" edges to the EntityPriceHistory entity.
+func (_u *EntityUpdate) ClearPriceHistory() *EntityUpdate {
+	_u.mutation.ClearPriceHistory()
+	return _u
+}
+
+// RemovePriceHistoryIDs removes the "price_history" edge to EntityPriceHistory entities by IDs.
+func (_u *EntityUpdate) RemovePriceHistoryIDs(ids ...uuid.UUID) *EntityUpdate {
+	_u.mutation.RemovePriceHistoryIDs(ids...)
+	return _u
+}
+
+// RemovePriceHistory removes "price_history" edges to EntityPriceHistory entities.
+func (_u *EntityUpdate) RemovePriceHistory(v ...*EntityPriceHistory) *EntityUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePriceHistoryIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *EntityUpdate) Save(ctx context.Context) (int, error) {
 	_u.defaults()
@@ -780,6 +912,16 @@ func (_u *EntityUpdate) check() error {
 	if v, ok := _u.mutation.SoldNotes(); ok {
 		if err := entity.SoldNotesValidator(v); err != nil {
 			return &ValidationError{Name: "sold_notes", err: fmt.Errorf(`ent: validator failed for field "Entity.sold_notes": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.PriceTrackingSource(); ok {
+		if err := entity.PriceTrackingSourceValidator(v); err != nil {
+			return &ValidationError{Name: "price_tracking_source", err: fmt.Errorf(`ent: validator failed for field "Entity.price_tracking_source": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.PriceTrackingID(); ok {
+		if err := entity.PriceTrackingIDValidator(v); err != nil {
+			return &ValidationError{Name: "price_tracking_id", err: fmt.Errorf(`ent: validator failed for field "Entity.price_tracking_id": %w`, err)}
 		}
 	}
 	if _u.mutation.GroupCleared() && len(_u.mutation.GroupIDs()) > 0 {
@@ -922,6 +1064,33 @@ func (_u *EntityUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.SoldNotesCleared() {
 		_spec.ClearField(entity.FieldSoldNotes, field.TypeString)
+	}
+	if value, ok := _u.mutation.CurrentMarketPrice(); ok {
+		_spec.SetField(entity.FieldCurrentMarketPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedCurrentMarketPrice(); ok {
+		_spec.AddField(entity.FieldCurrentMarketPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.LastPriceSyncAt(); ok {
+		_spec.SetField(entity.FieldLastPriceSyncAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastPriceSyncAtCleared() {
+		_spec.ClearField(entity.FieldLastPriceSyncAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.PriceTrackingEnabled(); ok {
+		_spec.SetField(entity.FieldPriceTrackingEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.PriceTrackingSource(); ok {
+		_spec.SetField(entity.FieldPriceTrackingSource, field.TypeString, value)
+	}
+	if _u.mutation.PriceTrackingSourceCleared() {
+		_spec.ClearField(entity.FieldPriceTrackingSource, field.TypeString)
+	}
+	if value, ok := _u.mutation.PriceTrackingID(); ok {
+		_spec.SetField(entity.FieldPriceTrackingID, field.TypeString, value)
+	}
+	if _u.mutation.PriceTrackingIDCleared() {
+		_spec.ClearField(entity.FieldPriceTrackingID, field.TypeString)
 	}
 	if _u.mutation.GroupCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1228,6 +1397,51 @@ func (_u *EntityUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(attachment.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PriceHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.PriceHistoryTable,
+			Columns: []string{entity.PriceHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(entitypricehistory.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPriceHistoryIDs(); len(nodes) > 0 && !_u.mutation.PriceHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.PriceHistoryTable,
+			Columns: []string{entity.PriceHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(entitypricehistory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PriceHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.PriceHistoryTable,
+			Columns: []string{entity.PriceHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(entitypricehistory.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -1675,6 +1889,101 @@ func (_u *EntityUpdateOne) ClearSoldNotes() *EntityUpdateOne {
 	return _u
 }
 
+// SetCurrentMarketPrice sets the "current_market_price" field.
+func (_u *EntityUpdateOne) SetCurrentMarketPrice(v float64) *EntityUpdateOne {
+	_u.mutation.ResetCurrentMarketPrice()
+	_u.mutation.SetCurrentMarketPrice(v)
+	return _u
+}
+
+// SetNillableCurrentMarketPrice sets the "current_market_price" field if the given value is not nil.
+func (_u *EntityUpdateOne) SetNillableCurrentMarketPrice(v *float64) *EntityUpdateOne {
+	if v != nil {
+		_u.SetCurrentMarketPrice(*v)
+	}
+	return _u
+}
+
+// AddCurrentMarketPrice adds value to the "current_market_price" field.
+func (_u *EntityUpdateOne) AddCurrentMarketPrice(v float64) *EntityUpdateOne {
+	_u.mutation.AddCurrentMarketPrice(v)
+	return _u
+}
+
+// SetLastPriceSyncAt sets the "last_price_sync_at" field.
+func (_u *EntityUpdateOne) SetLastPriceSyncAt(v time.Time) *EntityUpdateOne {
+	_u.mutation.SetLastPriceSyncAt(v)
+	return _u
+}
+
+// SetNillableLastPriceSyncAt sets the "last_price_sync_at" field if the given value is not nil.
+func (_u *EntityUpdateOne) SetNillableLastPriceSyncAt(v *time.Time) *EntityUpdateOne {
+	if v != nil {
+		_u.SetLastPriceSyncAt(*v)
+	}
+	return _u
+}
+
+// ClearLastPriceSyncAt clears the value of the "last_price_sync_at" field.
+func (_u *EntityUpdateOne) ClearLastPriceSyncAt() *EntityUpdateOne {
+	_u.mutation.ClearLastPriceSyncAt()
+	return _u
+}
+
+// SetPriceTrackingEnabled sets the "price_tracking_enabled" field.
+func (_u *EntityUpdateOne) SetPriceTrackingEnabled(v bool) *EntityUpdateOne {
+	_u.mutation.SetPriceTrackingEnabled(v)
+	return _u
+}
+
+// SetNillablePriceTrackingEnabled sets the "price_tracking_enabled" field if the given value is not nil.
+func (_u *EntityUpdateOne) SetNillablePriceTrackingEnabled(v *bool) *EntityUpdateOne {
+	if v != nil {
+		_u.SetPriceTrackingEnabled(*v)
+	}
+	return _u
+}
+
+// SetPriceTrackingSource sets the "price_tracking_source" field.
+func (_u *EntityUpdateOne) SetPriceTrackingSource(v string) *EntityUpdateOne {
+	_u.mutation.SetPriceTrackingSource(v)
+	return _u
+}
+
+// SetNillablePriceTrackingSource sets the "price_tracking_source" field if the given value is not nil.
+func (_u *EntityUpdateOne) SetNillablePriceTrackingSource(v *string) *EntityUpdateOne {
+	if v != nil {
+		_u.SetPriceTrackingSource(*v)
+	}
+	return _u
+}
+
+// ClearPriceTrackingSource clears the value of the "price_tracking_source" field.
+func (_u *EntityUpdateOne) ClearPriceTrackingSource() *EntityUpdateOne {
+	_u.mutation.ClearPriceTrackingSource()
+	return _u
+}
+
+// SetPriceTrackingID sets the "price_tracking_id" field.
+func (_u *EntityUpdateOne) SetPriceTrackingID(v string) *EntityUpdateOne {
+	_u.mutation.SetPriceTrackingID(v)
+	return _u
+}
+
+// SetNillablePriceTrackingID sets the "price_tracking_id" field if the given value is not nil.
+func (_u *EntityUpdateOne) SetNillablePriceTrackingID(v *string) *EntityUpdateOne {
+	if v != nil {
+		_u.SetPriceTrackingID(*v)
+	}
+	return _u
+}
+
+// ClearPriceTrackingID clears the value of the "price_tracking_id" field.
+func (_u *EntityUpdateOne) ClearPriceTrackingID() *EntityUpdateOne {
+	_u.mutation.ClearPriceTrackingID()
+	return _u
+}
+
 // SetGroupID sets the "group" edge to the Group entity by ID.
 func (_u *EntityUpdateOne) SetGroupID(id uuid.UUID) *EntityUpdateOne {
 	_u.mutation.SetGroupID(id)
@@ -1789,6 +2098,21 @@ func (_u *EntityUpdateOne) AddAttachments(v ...*Attachment) *EntityUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.AddAttachmentIDs(ids...)
+}
+
+// AddPriceHistoryIDs adds the "price_history" edge to the EntityPriceHistory entity by IDs.
+func (_u *EntityUpdateOne) AddPriceHistoryIDs(ids ...uuid.UUID) *EntityUpdateOne {
+	_u.mutation.AddPriceHistoryIDs(ids...)
+	return _u
+}
+
+// AddPriceHistory adds the "price_history" edges to the EntityPriceHistory entity.
+func (_u *EntityUpdateOne) AddPriceHistory(v ...*EntityPriceHistory) *EntityUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPriceHistoryIDs(ids...)
 }
 
 // Mutation returns the EntityMutation object of the builder.
@@ -1919,6 +2243,27 @@ func (_u *EntityUpdateOne) RemoveAttachments(v ...*Attachment) *EntityUpdateOne 
 	return _u.RemoveAttachmentIDs(ids...)
 }
 
+// ClearPriceHistory clears all "price_history" edges to the EntityPriceHistory entity.
+func (_u *EntityUpdateOne) ClearPriceHistory() *EntityUpdateOne {
+	_u.mutation.ClearPriceHistory()
+	return _u
+}
+
+// RemovePriceHistoryIDs removes the "price_history" edge to EntityPriceHistory entities by IDs.
+func (_u *EntityUpdateOne) RemovePriceHistoryIDs(ids ...uuid.UUID) *EntityUpdateOne {
+	_u.mutation.RemovePriceHistoryIDs(ids...)
+	return _u
+}
+
+// RemovePriceHistory removes "price_history" edges to EntityPriceHistory entities.
+func (_u *EntityUpdateOne) RemovePriceHistory(v ...*EntityPriceHistory) *EntityUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePriceHistoryIDs(ids...)
+}
+
 // Where appends a list predicates to the EntityUpdate builder.
 func (_u *EntityUpdateOne) Where(ps ...predicate.Entity) *EntityUpdateOne {
 	_u.mutation.Where(ps...)
@@ -2013,6 +2358,16 @@ func (_u *EntityUpdateOne) check() error {
 	if v, ok := _u.mutation.SoldNotes(); ok {
 		if err := entity.SoldNotesValidator(v); err != nil {
 			return &ValidationError{Name: "sold_notes", err: fmt.Errorf(`ent: validator failed for field "Entity.sold_notes": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.PriceTrackingSource(); ok {
+		if err := entity.PriceTrackingSourceValidator(v); err != nil {
+			return &ValidationError{Name: "price_tracking_source", err: fmt.Errorf(`ent: validator failed for field "Entity.price_tracking_source": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.PriceTrackingID(); ok {
+		if err := entity.PriceTrackingIDValidator(v); err != nil {
+			return &ValidationError{Name: "price_tracking_id", err: fmt.Errorf(`ent: validator failed for field "Entity.price_tracking_id": %w`, err)}
 		}
 	}
 	if _u.mutation.GroupCleared() && len(_u.mutation.GroupIDs()) > 0 {
@@ -2172,6 +2527,33 @@ func (_u *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err erro
 	}
 	if _u.mutation.SoldNotesCleared() {
 		_spec.ClearField(entity.FieldSoldNotes, field.TypeString)
+	}
+	if value, ok := _u.mutation.CurrentMarketPrice(); ok {
+		_spec.SetField(entity.FieldCurrentMarketPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedCurrentMarketPrice(); ok {
+		_spec.AddField(entity.FieldCurrentMarketPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.LastPriceSyncAt(); ok {
+		_spec.SetField(entity.FieldLastPriceSyncAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastPriceSyncAtCleared() {
+		_spec.ClearField(entity.FieldLastPriceSyncAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.PriceTrackingEnabled(); ok {
+		_spec.SetField(entity.FieldPriceTrackingEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.PriceTrackingSource(); ok {
+		_spec.SetField(entity.FieldPriceTrackingSource, field.TypeString, value)
+	}
+	if _u.mutation.PriceTrackingSourceCleared() {
+		_spec.ClearField(entity.FieldPriceTrackingSource, field.TypeString)
+	}
+	if value, ok := _u.mutation.PriceTrackingID(); ok {
+		_spec.SetField(entity.FieldPriceTrackingID, field.TypeString, value)
+	}
+	if _u.mutation.PriceTrackingIDCleared() {
+		_spec.ClearField(entity.FieldPriceTrackingID, field.TypeString)
 	}
 	if _u.mutation.GroupCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -2478,6 +2860,51 @@ func (_u *EntityUpdateOne) sqlSave(ctx context.Context) (_node *Entity, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(attachment.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PriceHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.PriceHistoryTable,
+			Columns: []string{entity.PriceHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(entitypricehistory.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPriceHistoryIDs(); len(nodes) > 0 && !_u.mutation.PriceHistoryCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.PriceHistoryTable,
+			Columns: []string{entity.PriceHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(entitypricehistory.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PriceHistoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entity.PriceHistoryTable,
+			Columns: []string{entity.PriceHistoryColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(entitypricehistory.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

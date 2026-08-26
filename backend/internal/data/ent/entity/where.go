@@ -176,6 +176,31 @@ func SoldNotes(v string) predicate.Entity {
 	return predicate.Entity(sql.FieldEQ(FieldSoldNotes, v))
 }
 
+// CurrentMarketPrice applies equality check predicate on the "current_market_price" field. It's identical to CurrentMarketPriceEQ.
+func CurrentMarketPrice(v float64) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldCurrentMarketPrice, v))
+}
+
+// LastPriceSyncAt applies equality check predicate on the "last_price_sync_at" field. It's identical to LastPriceSyncAtEQ.
+func LastPriceSyncAt(v time.Time) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldLastPriceSyncAt, v))
+}
+
+// PriceTrackingEnabled applies equality check predicate on the "price_tracking_enabled" field. It's identical to PriceTrackingEnabledEQ.
+func PriceTrackingEnabled(v bool) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldPriceTrackingEnabled, v))
+}
+
+// PriceTrackingSource applies equality check predicate on the "price_tracking_source" field. It's identical to PriceTrackingSourceEQ.
+func PriceTrackingSource(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingID applies equality check predicate on the "price_tracking_id" field. It's identical to PriceTrackingIDEQ.
+func PriceTrackingID(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldPriceTrackingID, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Entity {
 	return predicate.Entity(sql.FieldEQ(FieldCreatedAt, v))
@@ -1421,6 +1446,256 @@ func SoldNotesContainsFold(v string) predicate.Entity {
 	return predicate.Entity(sql.FieldContainsFold(FieldSoldNotes, v))
 }
 
+// CurrentMarketPriceEQ applies the EQ predicate on the "current_market_price" field.
+func CurrentMarketPriceEQ(v float64) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldCurrentMarketPrice, v))
+}
+
+// CurrentMarketPriceNEQ applies the NEQ predicate on the "current_market_price" field.
+func CurrentMarketPriceNEQ(v float64) predicate.Entity {
+	return predicate.Entity(sql.FieldNEQ(FieldCurrentMarketPrice, v))
+}
+
+// CurrentMarketPriceIn applies the In predicate on the "current_market_price" field.
+func CurrentMarketPriceIn(vs ...float64) predicate.Entity {
+	return predicate.Entity(sql.FieldIn(FieldCurrentMarketPrice, vs...))
+}
+
+// CurrentMarketPriceNotIn applies the NotIn predicate on the "current_market_price" field.
+func CurrentMarketPriceNotIn(vs ...float64) predicate.Entity {
+	return predicate.Entity(sql.FieldNotIn(FieldCurrentMarketPrice, vs...))
+}
+
+// CurrentMarketPriceGT applies the GT predicate on the "current_market_price" field.
+func CurrentMarketPriceGT(v float64) predicate.Entity {
+	return predicate.Entity(sql.FieldGT(FieldCurrentMarketPrice, v))
+}
+
+// CurrentMarketPriceGTE applies the GTE predicate on the "current_market_price" field.
+func CurrentMarketPriceGTE(v float64) predicate.Entity {
+	return predicate.Entity(sql.FieldGTE(FieldCurrentMarketPrice, v))
+}
+
+// CurrentMarketPriceLT applies the LT predicate on the "current_market_price" field.
+func CurrentMarketPriceLT(v float64) predicate.Entity {
+	return predicate.Entity(sql.FieldLT(FieldCurrentMarketPrice, v))
+}
+
+// CurrentMarketPriceLTE applies the LTE predicate on the "current_market_price" field.
+func CurrentMarketPriceLTE(v float64) predicate.Entity {
+	return predicate.Entity(sql.FieldLTE(FieldCurrentMarketPrice, v))
+}
+
+// LastPriceSyncAtEQ applies the EQ predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtEQ(v time.Time) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldLastPriceSyncAt, v))
+}
+
+// LastPriceSyncAtNEQ applies the NEQ predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtNEQ(v time.Time) predicate.Entity {
+	return predicate.Entity(sql.FieldNEQ(FieldLastPriceSyncAt, v))
+}
+
+// LastPriceSyncAtIn applies the In predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtIn(vs ...time.Time) predicate.Entity {
+	return predicate.Entity(sql.FieldIn(FieldLastPriceSyncAt, vs...))
+}
+
+// LastPriceSyncAtNotIn applies the NotIn predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtNotIn(vs ...time.Time) predicate.Entity {
+	return predicate.Entity(sql.FieldNotIn(FieldLastPriceSyncAt, vs...))
+}
+
+// LastPriceSyncAtGT applies the GT predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtGT(v time.Time) predicate.Entity {
+	return predicate.Entity(sql.FieldGT(FieldLastPriceSyncAt, v))
+}
+
+// LastPriceSyncAtGTE applies the GTE predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtGTE(v time.Time) predicate.Entity {
+	return predicate.Entity(sql.FieldGTE(FieldLastPriceSyncAt, v))
+}
+
+// LastPriceSyncAtLT applies the LT predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtLT(v time.Time) predicate.Entity {
+	return predicate.Entity(sql.FieldLT(FieldLastPriceSyncAt, v))
+}
+
+// LastPriceSyncAtLTE applies the LTE predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtLTE(v time.Time) predicate.Entity {
+	return predicate.Entity(sql.FieldLTE(FieldLastPriceSyncAt, v))
+}
+
+// LastPriceSyncAtIsNil applies the IsNil predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtIsNil() predicate.Entity {
+	return predicate.Entity(sql.FieldIsNull(FieldLastPriceSyncAt))
+}
+
+// LastPriceSyncAtNotNil applies the NotNil predicate on the "last_price_sync_at" field.
+func LastPriceSyncAtNotNil() predicate.Entity {
+	return predicate.Entity(sql.FieldNotNull(FieldLastPriceSyncAt))
+}
+
+// PriceTrackingEnabledEQ applies the EQ predicate on the "price_tracking_enabled" field.
+func PriceTrackingEnabledEQ(v bool) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldPriceTrackingEnabled, v))
+}
+
+// PriceTrackingEnabledNEQ applies the NEQ predicate on the "price_tracking_enabled" field.
+func PriceTrackingEnabledNEQ(v bool) predicate.Entity {
+	return predicate.Entity(sql.FieldNEQ(FieldPriceTrackingEnabled, v))
+}
+
+// PriceTrackingSourceEQ applies the EQ predicate on the "price_tracking_source" field.
+func PriceTrackingSourceEQ(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceNEQ applies the NEQ predicate on the "price_tracking_source" field.
+func PriceTrackingSourceNEQ(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldNEQ(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceIn applies the In predicate on the "price_tracking_source" field.
+func PriceTrackingSourceIn(vs ...string) predicate.Entity {
+	return predicate.Entity(sql.FieldIn(FieldPriceTrackingSource, vs...))
+}
+
+// PriceTrackingSourceNotIn applies the NotIn predicate on the "price_tracking_source" field.
+func PriceTrackingSourceNotIn(vs ...string) predicate.Entity {
+	return predicate.Entity(sql.FieldNotIn(FieldPriceTrackingSource, vs...))
+}
+
+// PriceTrackingSourceGT applies the GT predicate on the "price_tracking_source" field.
+func PriceTrackingSourceGT(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldGT(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceGTE applies the GTE predicate on the "price_tracking_source" field.
+func PriceTrackingSourceGTE(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldGTE(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceLT applies the LT predicate on the "price_tracking_source" field.
+func PriceTrackingSourceLT(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldLT(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceLTE applies the LTE predicate on the "price_tracking_source" field.
+func PriceTrackingSourceLTE(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldLTE(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceContains applies the Contains predicate on the "price_tracking_source" field.
+func PriceTrackingSourceContains(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldContains(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceHasPrefix applies the HasPrefix predicate on the "price_tracking_source" field.
+func PriceTrackingSourceHasPrefix(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldHasPrefix(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceHasSuffix applies the HasSuffix predicate on the "price_tracking_source" field.
+func PriceTrackingSourceHasSuffix(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldHasSuffix(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceIsNil applies the IsNil predicate on the "price_tracking_source" field.
+func PriceTrackingSourceIsNil() predicate.Entity {
+	return predicate.Entity(sql.FieldIsNull(FieldPriceTrackingSource))
+}
+
+// PriceTrackingSourceNotNil applies the NotNil predicate on the "price_tracking_source" field.
+func PriceTrackingSourceNotNil() predicate.Entity {
+	return predicate.Entity(sql.FieldNotNull(FieldPriceTrackingSource))
+}
+
+// PriceTrackingSourceEqualFold applies the EqualFold predicate on the "price_tracking_source" field.
+func PriceTrackingSourceEqualFold(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldEqualFold(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingSourceContainsFold applies the ContainsFold predicate on the "price_tracking_source" field.
+func PriceTrackingSourceContainsFold(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldContainsFold(FieldPriceTrackingSource, v))
+}
+
+// PriceTrackingIDEQ applies the EQ predicate on the "price_tracking_id" field.
+func PriceTrackingIDEQ(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldEQ(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDNEQ applies the NEQ predicate on the "price_tracking_id" field.
+func PriceTrackingIDNEQ(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldNEQ(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDIn applies the In predicate on the "price_tracking_id" field.
+func PriceTrackingIDIn(vs ...string) predicate.Entity {
+	return predicate.Entity(sql.FieldIn(FieldPriceTrackingID, vs...))
+}
+
+// PriceTrackingIDNotIn applies the NotIn predicate on the "price_tracking_id" field.
+func PriceTrackingIDNotIn(vs ...string) predicate.Entity {
+	return predicate.Entity(sql.FieldNotIn(FieldPriceTrackingID, vs...))
+}
+
+// PriceTrackingIDGT applies the GT predicate on the "price_tracking_id" field.
+func PriceTrackingIDGT(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldGT(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDGTE applies the GTE predicate on the "price_tracking_id" field.
+func PriceTrackingIDGTE(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldGTE(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDLT applies the LT predicate on the "price_tracking_id" field.
+func PriceTrackingIDLT(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldLT(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDLTE applies the LTE predicate on the "price_tracking_id" field.
+func PriceTrackingIDLTE(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldLTE(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDContains applies the Contains predicate on the "price_tracking_id" field.
+func PriceTrackingIDContains(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldContains(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDHasPrefix applies the HasPrefix predicate on the "price_tracking_id" field.
+func PriceTrackingIDHasPrefix(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldHasPrefix(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDHasSuffix applies the HasSuffix predicate on the "price_tracking_id" field.
+func PriceTrackingIDHasSuffix(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldHasSuffix(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDIsNil applies the IsNil predicate on the "price_tracking_id" field.
+func PriceTrackingIDIsNil() predicate.Entity {
+	return predicate.Entity(sql.FieldIsNull(FieldPriceTrackingID))
+}
+
+// PriceTrackingIDNotNil applies the NotNil predicate on the "price_tracking_id" field.
+func PriceTrackingIDNotNil() predicate.Entity {
+	return predicate.Entity(sql.FieldNotNull(FieldPriceTrackingID))
+}
+
+// PriceTrackingIDEqualFold applies the EqualFold predicate on the "price_tracking_id" field.
+func PriceTrackingIDEqualFold(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldEqualFold(FieldPriceTrackingID, v))
+}
+
+// PriceTrackingIDContainsFold applies the ContainsFold predicate on the "price_tracking_id" field.
+func PriceTrackingIDContainsFold(v string) predicate.Entity {
+	return predicate.Entity(sql.FieldContainsFold(FieldPriceTrackingID, v))
+}
+
 // HasGroup applies the HasEdge predicate on the "group" edge.
 func HasGroup() predicate.Entity {
 	return predicate.Entity(func(s *sql.Selector) {
@@ -1597,6 +1872,29 @@ func HasAttachments() predicate.Entity {
 func HasAttachmentsWith(preds ...predicate.Attachment) predicate.Entity {
 	return predicate.Entity(func(s *sql.Selector) {
 		step := newAttachmentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPriceHistory applies the HasEdge predicate on the "price_history" edge.
+func HasPriceHistory() predicate.Entity {
+	return predicate.Entity(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PriceHistoryTable, PriceHistoryColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPriceHistoryWith applies the HasEdge predicate on the "price_history" edge with a given conditions (other predicates).
+func HasPriceHistoryWith(preds ...predicate.EntityPriceHistory) predicate.Entity {
+	return predicate.Entity(func(s *sql.Selector) {
+		step := newPriceHistoryStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

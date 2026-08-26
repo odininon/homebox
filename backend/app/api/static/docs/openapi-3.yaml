@@ -673,6 +673,121 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/repo.EntityPath"
+  "/v1/entities/{id}/prices":
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Item Pricing
+      summary: Get Item Price History
+      parameters:
+        - description: Item ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/repo.PriceHistoryEntry"
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - Item Pricing
+      summary: Create Manual Price Snapshot
+      parameters:
+        - description: Item ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/repo.PriceHistoryCreate"
+        description: Price Data
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/repo.PriceHistoryEntry"
+  "/v1/entities/{id}/prices/auto-detect":
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - Item Pricing
+      summary: Auto-detect TCGPlayer Link from Custom Fields and Enable Tracking
+      parameters:
+        - description: Item ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/repo.EntityOut"
+  "/v1/entities/{id}/prices/sync":
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - Item Pricing
+      summary: Sync Item Price From TCGPlayer/Market
+      parameters:
+        - description: Item ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/repo.PriceHistoryEntry"
+  "/v1/entities/{id}/prices/{price_id}":
+    delete:
+      security:
+        - Bearer: []
+      tags:
+        - Item Pricing
+      summary: Delete Price Snapshot
+      parameters:
+        - description: Item ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: Price Snapshot ID
+          name: price_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
   /v1/entity-types:
     get:
       security:
@@ -1401,6 +1516,29 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/repo.BarcodeProduct"
+  /v1/products/search-pricing:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Item Pricing
+      summary: Search Products in TCG Catalog
+      parameters:
+        - description: Search query
+          name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/pricing.ProductSearchResult"
   /v1/qrcode:
     get:
       security:
@@ -2249,6 +2387,10 @@ components:
         created_at:
           description: CreatedAt holds the value of the "created_at" field.
           type: string
+        current_market_price:
+          description: CurrentMarketPrice holds the value of the "current_market_price"
+            field.
+          type: number
         description:
           description: Description holds the value of the "description" field.
           type: string
@@ -2268,6 +2410,9 @@ components:
         insured:
           description: Insured holds the value of the "insured" field.
           type: boolean
+        last_price_sync_at:
+          description: LastPriceSyncAt holds the value of the "last_price_sync_at" field.
+          type: string
         lifetime_warranty:
           description: LifetimeWarranty holds the value of the "lifetime_warranty" field.
           type: boolean
@@ -2282,6 +2427,17 @@ components:
           type: string
         notes:
           description: Notes holds the value of the "notes" field.
+          type: string
+        price_tracking_enabled:
+          description: PriceTrackingEnabled holds the value of the
+            "price_tracking_enabled" field.
+          type: boolean
+        price_tracking_id:
+          description: PriceTrackingID holds the value of the "price_tracking_id" field.
+          type: string
+        price_tracking_source:
+          description: PriceTrackingSource holds the value of the "price_tracking_source"
+            field.
           type: string
         purchase_date:
           description: PurchaseDate holds the value of the "purchase_date" field.
@@ -2358,6 +2514,11 @@ components:
           description: Parent holds the value of the parent edge.
           allOf:
             - $ref: "#/components/schemas/ent.Entity"
+        price_history:
+          description: PriceHistory holds the value of the price_history edge.
+          type: array
+          items:
+            $ref: "#/components/schemas/ent.EntityPriceHistory"
         tag:
           description: Tag holds the value of the tag edge.
           type: array
@@ -2405,6 +2566,62 @@ components:
           description: UpdatedAt holds the value of the "updated_at" field.
           type: string
     ent.EntityFieldEdges:
+      type: object
+      properties:
+        entity:
+          description: Entity holds the value of the entity edge.
+          allOf:
+            - $ref: "#/components/schemas/ent.Entity"
+    ent.EntityPriceHistory:
+      type: object
+      properties:
+        created_at:
+          description: CreatedAt holds the value of the "created_at" field.
+          type: string
+        direct_low:
+          description: DirectLow holds the value of the "direct_low" field.
+          type: number
+        edges:
+          description: >-
+            Edges holds the relations/edges for other nodes in the graph.
+
+            The values are being populated by the EntityPriceHistoryQuery when eager-loading is set.
+          allOf:
+            - $ref: "#/components/schemas/ent.EntityPriceHistoryEdges"
+        entity_id:
+          description: EntityID holds the value of the "entity_id" field.
+          type: string
+        id:
+          description: ID of the ent.
+          type: string
+        market_high:
+          description: MarketHigh holds the value of the "market_high" field.
+          type: number
+        market_low:
+          description: MarketLow holds the value of the "market_low" field.
+          type: number
+        market_mid:
+          description: MarketMid holds the value of the "market_mid" field.
+          type: number
+        notes:
+          description: Notes holds the value of the "notes" field.
+          type: string
+        price:
+          description: Price holds the value of the "price" field.
+          type: number
+        recorded_at:
+          description: RecordedAt holds the value of the "recorded_at" field.
+          type: string
+        source:
+          description: Source holds the value of the "source" field.
+          type: string
+        source_id:
+          description: SourceID holds the value of the "source_id" field.
+          type: string
+        updated_at:
+          description: UpdatedAt holds the value of the "updated_at" field.
+          type: string
+    ent.EntityPriceHistoryEdges:
       type: object
       properties:
         entity:
@@ -3078,6 +3295,25 @@ components:
         - StatusRunning
         - StatusCompleted
         - StatusFailed
+    pricing.ProductSearchResult:
+      type: object
+      properties:
+        cleanName:
+          type: string
+        groupId:
+          type: integer
+        groupName:
+          type: string
+        imageUrl:
+          type: string
+        marketPrice:
+          type: number
+        name:
+          type: string
+        productId:
+          type: integer
+        url:
+          type: string
     repo.APIKeyCreate:
       type: object
       required:
@@ -3245,6 +3481,9 @@ components:
             $ref: "#/components/schemas/repo.EntitySummary"
         createdAt:
           type: string
+        currentMarketPrice:
+          description: Price Tracking
+          type: number
         description:
           type: string
         entityType:
@@ -3267,6 +3506,10 @@ components:
         itemCount:
           description: Container-specific (populated when querying locations)
           type: number
+        lastPriceSyncAt:
+          type: string
+          x-omitempty: true
+          nullable: true
         lifetimeWarranty:
           description: Warranty
           type: boolean
@@ -3295,6 +3538,12 @@ components:
             - $ref: "#/components/schemas/repo.EntitySummary"
           x-omitempty: true
           nullable: true
+        priceTrackingEnabled:
+          type: boolean
+        priceTrackingId:
+          type: string
+        priceTrackingSource:
+          type: string
         purchaseDate:
           description: Purchase
           type: string
@@ -3383,6 +3632,9 @@ components:
           example: "0"
         createdAt:
           type: string
+        currentMarketPrice:
+          description: Price Tracking
+          type: number
         description:
           type: string
         entityType:
@@ -3409,6 +3661,8 @@ components:
             - $ref: "#/components/schemas/repo.EntitySummary"
           x-omitempty: true
           nullable: true
+        priceTrackingEnabled:
+          type: boolean
         purchasePrice:
           type: number
         quantity:
@@ -3675,6 +3929,8 @@ components:
           type: boolean
         assetId:
           type: string
+        currentMarketPrice:
+          type: number
         description:
           type: string
           maxLength: 1000
@@ -3706,6 +3962,13 @@ components:
           type: string
           x-omitempty: true
           nullable: true
+        priceTrackingEnabled:
+          description: Price Tracking
+          type: boolean
+        priceTrackingId:
+          type: string
+        priceTrackingSource:
+          type: string
         purchaseDate:
           description: Purchase
           type: string
@@ -3983,6 +4246,54 @@ components:
           type: integer
         total:
           type: integer
+    repo.PriceHistoryCreate:
+      type: object
+      properties:
+        directLow:
+          type: number
+        marketHigh:
+          type: number
+        marketLow:
+          type: number
+        marketMid:
+          type: number
+        notes:
+          type: string
+        price:
+          type: number
+        recordedAt:
+          type: string
+        source:
+          type: string
+        sourceId:
+          type: string
+    repo.PriceHistoryEntry:
+      type: object
+      properties:
+        createdAt:
+          type: string
+        directLow:
+          type: number
+        entityId:
+          type: string
+        id:
+          type: string
+        marketHigh:
+          type: number
+        marketLow:
+          type: number
+        marketMid:
+          type: number
+        notes:
+          type: string
+        price:
+          type: number
+        recordedAt:
+          type: string
+        source:
+          type: string
+        sourceId:
+          type: string
     repo.TagCreate:
       type: object
       required:

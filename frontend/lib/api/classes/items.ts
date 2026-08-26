@@ -11,6 +11,9 @@ import type {
   MaintenanceEntry,
   MaintenanceEntryCreate,
   MaintenanceEntryWithDetails,
+  PriceHistoryCreate,
+  PriceHistoryEntry,
+  ProductSearchResult,
   TreeItem,
 } from "../types/data-contracts";
 import type { AttachmentTypes } from "../types/non-generated";
@@ -104,16 +107,57 @@ export class ItemMaintenanceAPI extends BaseAPI {
   }
 }
 
+export class ItemPricingAPI extends BaseAPI {
+  getPrices(itemId: string) {
+    return this.http.get<PriceHistoryEntry[]>({
+      url: route(`/entities/${itemId}/prices`),
+    });
+  }
+
+  syncPrice(itemId: string) {
+    return this.http.post<void, PriceHistoryEntry>({
+      url: route(`/entities/${itemId}/prices/sync`),
+    });
+  }
+
+  autoDetectPricing(itemId: string) {
+    return this.http.post<void, EntityOut>({
+      url: route(`/entities/${itemId}/prices/auto-detect`),
+    });
+  }
+
+  create(itemId: string, data: PriceHistoryCreate) {
+    return this.http.post<PriceHistoryCreate, PriceHistoryEntry>({
+      url: route(`/entities/${itemId}/prices`),
+      body: data,
+    });
+  }
+
+  delete(itemId: string, priceId: string) {
+    return this.http.delete<void>({
+      url: route(`/entities/${itemId}/prices/${priceId}`),
+    });
+  }
+
+  searchCatalog(query: string) {
+    return this.http.get<ProductSearchResult[]>({
+      url: route(`/products/search-pricing`, { q: query }),
+    });
+  }
+}
+
 export class ItemsApi extends BaseAPI {
   attachments: AttachmentsAPI;
   maintenance: ItemMaintenanceAPI;
   fields: FieldsAPI;
+  pricing: ItemPricingAPI;
 
   constructor(http: Requests, token: string) {
     super(http, token);
     this.fields = new FieldsAPI(http);
     this.attachments = new AttachmentsAPI(http);
     this.maintenance = new ItemMaintenanceAPI(http);
+    this.pricing = new ItemPricingAPI(http);
   }
 
   fullpath(id: string) {

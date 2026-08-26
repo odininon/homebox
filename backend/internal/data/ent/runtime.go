@@ -11,6 +11,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/authtokens"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entityfield"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitypricehistory"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytemplate"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/export"
@@ -225,6 +226,24 @@ func init() {
 	entityDescSoldNotes := entityFields[19].Descriptor()
 	// entity.SoldNotesValidator is a validator for the "sold_notes" field. It is called by the builders before save.
 	entity.SoldNotesValidator = entityDescSoldNotes.Validators[0].(func(string) error)
+	// entityDescCurrentMarketPrice is the schema descriptor for current_market_price field.
+	entityDescCurrentMarketPrice := entityFields[20].Descriptor()
+	// entity.DefaultCurrentMarketPrice holds the default value on creation for the current_market_price field.
+	entity.DefaultCurrentMarketPrice = entityDescCurrentMarketPrice.Default.(float64)
+	// entityDescPriceTrackingEnabled is the schema descriptor for price_tracking_enabled field.
+	entityDescPriceTrackingEnabled := entityFields[22].Descriptor()
+	// entity.DefaultPriceTrackingEnabled holds the default value on creation for the price_tracking_enabled field.
+	entity.DefaultPriceTrackingEnabled = entityDescPriceTrackingEnabled.Default.(bool)
+	// entityDescPriceTrackingSource is the schema descriptor for price_tracking_source field.
+	entityDescPriceTrackingSource := entityFields[23].Descriptor()
+	// entity.DefaultPriceTrackingSource holds the default value on creation for the price_tracking_source field.
+	entity.DefaultPriceTrackingSource = entityDescPriceTrackingSource.Default.(string)
+	// entity.PriceTrackingSourceValidator is a validator for the "price_tracking_source" field. It is called by the builders before save.
+	entity.PriceTrackingSourceValidator = entityDescPriceTrackingSource.Validators[0].(func(string) error)
+	// entityDescPriceTrackingID is the schema descriptor for price_tracking_id field.
+	entityDescPriceTrackingID := entityFields[24].Descriptor()
+	// entity.PriceTrackingIDValidator is a validator for the "price_tracking_id" field. It is called by the builders before save.
+	entity.PriceTrackingIDValidator = entityDescPriceTrackingID.Validators[0].(func(string) error)
 	// entityDescID is the schema descriptor for id field.
 	entityDescID := entityMixinFields0[0].Descriptor()
 	// entity.DefaultID holds the default value on creation for the id field.
@@ -284,6 +303,59 @@ func init() {
 	entityfieldDescID := entityfieldMixinFields0[0].Descriptor()
 	// entityfield.DefaultID holds the default value on creation for the id field.
 	entityfield.DefaultID = entityfieldDescID.Default.(func() uuid.UUID)
+	entitypricehistoryMixin := schema.EntityPriceHistory{}.Mixin()
+	entitypricehistoryMixinFields0 := entitypricehistoryMixin[0].Fields()
+	_ = entitypricehistoryMixinFields0
+	entitypricehistoryFields := schema.EntityPriceHistory{}.Fields()
+	_ = entitypricehistoryFields
+	// entitypricehistoryDescCreatedAt is the schema descriptor for created_at field.
+	entitypricehistoryDescCreatedAt := entitypricehistoryMixinFields0[1].Descriptor()
+	// entitypricehistory.DefaultCreatedAt holds the default value on creation for the created_at field.
+	entitypricehistory.DefaultCreatedAt = entitypricehistoryDescCreatedAt.Default.(func() time.Time)
+	// entitypricehistoryDescUpdatedAt is the schema descriptor for updated_at field.
+	entitypricehistoryDescUpdatedAt := entitypricehistoryMixinFields0[2].Descriptor()
+	// entitypricehistory.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	entitypricehistory.DefaultUpdatedAt = entitypricehistoryDescUpdatedAt.Default.(func() time.Time)
+	// entitypricehistory.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	entitypricehistory.UpdateDefaultUpdatedAt = entitypricehistoryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// entitypricehistoryDescPrice is the schema descriptor for price field.
+	entitypricehistoryDescPrice := entitypricehistoryFields[1].Descriptor()
+	// entitypricehistory.DefaultPrice holds the default value on creation for the price field.
+	entitypricehistory.DefaultPrice = entitypricehistoryDescPrice.Default.(float64)
+	// entitypricehistoryDescMarketLow is the schema descriptor for market_low field.
+	entitypricehistoryDescMarketLow := entitypricehistoryFields[2].Descriptor()
+	// entitypricehistory.DefaultMarketLow holds the default value on creation for the market_low field.
+	entitypricehistory.DefaultMarketLow = entitypricehistoryDescMarketLow.Default.(float64)
+	// entitypricehistoryDescMarketMid is the schema descriptor for market_mid field.
+	entitypricehistoryDescMarketMid := entitypricehistoryFields[3].Descriptor()
+	// entitypricehistory.DefaultMarketMid holds the default value on creation for the market_mid field.
+	entitypricehistory.DefaultMarketMid = entitypricehistoryDescMarketMid.Default.(float64)
+	// entitypricehistoryDescMarketHigh is the schema descriptor for market_high field.
+	entitypricehistoryDescMarketHigh := entitypricehistoryFields[4].Descriptor()
+	// entitypricehistory.DefaultMarketHigh holds the default value on creation for the market_high field.
+	entitypricehistory.DefaultMarketHigh = entitypricehistoryDescMarketHigh.Default.(float64)
+	// entitypricehistoryDescDirectLow is the schema descriptor for direct_low field.
+	entitypricehistoryDescDirectLow := entitypricehistoryFields[5].Descriptor()
+	// entitypricehistory.DefaultDirectLow holds the default value on creation for the direct_low field.
+	entitypricehistory.DefaultDirectLow = entitypricehistoryDescDirectLow.Default.(float64)
+	// entitypricehistoryDescSource is the schema descriptor for source field.
+	entitypricehistoryDescSource := entitypricehistoryFields[6].Descriptor()
+	// entitypricehistory.DefaultSource holds the default value on creation for the source field.
+	entitypricehistory.DefaultSource = entitypricehistoryDescSource.Default.(string)
+	// entitypricehistory.SourceValidator is a validator for the "source" field. It is called by the builders before save.
+	entitypricehistory.SourceValidator = entitypricehistoryDescSource.Validators[0].(func(string) error)
+	// entitypricehistoryDescSourceID is the schema descriptor for source_id field.
+	entitypricehistoryDescSourceID := entitypricehistoryFields[7].Descriptor()
+	// entitypricehistory.SourceIDValidator is a validator for the "source_id" field. It is called by the builders before save.
+	entitypricehistory.SourceIDValidator = entitypricehistoryDescSourceID.Validators[0].(func(string) error)
+	// entitypricehistoryDescNotes is the schema descriptor for notes field.
+	entitypricehistoryDescNotes := entitypricehistoryFields[9].Descriptor()
+	// entitypricehistory.NotesValidator is a validator for the "notes" field. It is called by the builders before save.
+	entitypricehistory.NotesValidator = entitypricehistoryDescNotes.Validators[0].(func(string) error)
+	// entitypricehistoryDescID is the schema descriptor for id field.
+	entitypricehistoryDescID := entitypricehistoryMixinFields0[0].Descriptor()
+	// entitypricehistory.DefaultID holds the default value on creation for the id field.
+	entitypricehistory.DefaultID = entitypricehistoryDescID.Default.(func() uuid.UUID)
 	entitytemplateMixin := schema.EntityTemplate{}.Mixin()
 	entitytemplateMixinFields0 := entitytemplateMixin[0].Fields()
 	_ = entitytemplateMixinFields0
