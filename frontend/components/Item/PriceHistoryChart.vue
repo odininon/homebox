@@ -206,7 +206,7 @@
       </div>
       <div class="flex gap-1 rounded-lg border bg-muted/40 p-1 text-xs">
         <button
-          v-for="range in (['1M', '3M', '6M', '1Y', 'ALL'] as const)"
+          v-for="range in ['1M', '3M', '6M', '1Y', 'ALL'] as const"
           :key="range"
           class="rounded px-2.5 py-1 font-medium transition-colors"
           :class="
@@ -222,8 +222,13 @@
     </div>
 
     <!-- Empty state -->
-    <div v-if="filteredEntries.length === 0" class="flex h-44 items-center justify-center rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-      {{ $t("items.no_price_history", "No price history recorded yet. Click 'Sync Price' to fetch latest market data.") }}
+    <div
+      v-if="filteredEntries.length === 0"
+      class="flex h-44 items-center justify-center rounded-lg border border-dashed p-6 text-sm text-muted-foreground"
+    >
+      {{
+        $t("items.no_price_history", "No price history recorded yet. Click 'Sync Price' to fetch latest market data.")
+      }}
     </div>
 
     <!-- Chart Container -->
@@ -241,13 +246,28 @@
           {{ formatCurrency(hoveredPoint.entry.price) }}
         </div>
         <div class="text-[11px] text-muted-foreground">
-          {{ new Date(hoveredPoint.entry.recordedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) }}
+          {{
+            new Date(hoveredPoint.entry.recordedAt).toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
+          }}
         </div>
-        <div v-if="hoveredPoint.entry.marketLow || hoveredPoint.entry.marketHigh" class="text-[10px] text-muted-foreground/80">
-          Range: {{ formatCurrency(hoveredPoint.entry.marketLow || 0) }} - {{ formatCurrency(hoveredPoint.entry.marketHigh || 0) }}
+        <div
+          v-if="hoveredPoint.entry.marketLow || hoveredPoint.entry.marketHigh"
+          class="text-[10px] text-muted-foreground/80"
+        >
+          Range: {{ formatCurrency(hoveredPoint.entry.marketLow || 0) }} -
+          {{ formatCurrency(hoveredPoint.entry.marketHigh || 0) }}
         </div>
-        <div v-if="gainLoss" class="mt-1 font-medium" :class="gainLoss.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
-          {{ gainLoss.isPositive ? '+' : '' }}{{ formatCurrency(gainLoss.diff) }} ({{ gainLoss.isPositive ? '+' : '' }}{{ gainLoss.pct.toFixed(1) }}%) vs cost
+        <div
+          v-if="gainLoss"
+          class="mt-1 font-medium"
+          :class="gainLoss.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
+        >
+          {{ gainLoss.isPositive ? "+" : "" }}{{ formatCurrency(gainLoss.diff) }} ({{ gainLoss.isPositive ? "+" : ""
+          }}{{ gainLoss.pct.toFixed(1) }}%) vs cost
         </div>
       </div>
 
@@ -280,7 +300,7 @@
         </g>
 
         <!-- Y-Axis Labels -->
-        <g class="text-[10px] fill-muted-foreground">
+        <g class="fill-muted-foreground text-[10px]">
           <text
             v-for="tick in yTicks"
             :key="'label-' + tick.value"
@@ -307,7 +327,7 @@
             :x="svgWidth - padding.right - 4"
             :y="baselineY - 4"
             text-anchor="end"
-            class="text-[9px] font-semibold fill-orange-600 dark:fill-orange-400"
+            class="fill-orange-600 text-[9px] font-semibold dark:fill-orange-400"
           >
             Cost Basis: {{ formatCurrency(purchasePrice || 0) }}
           </text>
@@ -328,14 +348,8 @@
         />
 
         <!-- X-Axis Labels -->
-        <g class="text-[10px] fill-muted-foreground">
-          <text
-            v-for="(tick, idx) in xTicks"
-            :key="idx"
-            :x="tick.x"
-            :y="svgHeight - 10"
-            text-anchor="middle"
-          >
+        <g class="fill-muted-foreground text-[10px]">
+          <text v-for="(tick, idx) in xTicks" :key="idx" :x="tick.x" :y="svgHeight - 10" text-anchor="middle">
             {{ tick.label }}
           </text>
         </g>
@@ -348,7 +362,7 @@
             :cx="p.x"
             :cy="p.y"
             r="4.5"
-            class="fill-background stroke-primary stroke-[2.5] transition-all hover:r-6 cursor-pointer"
+            class="cursor-pointer fill-background stroke-primary stroke-[2.5] transition-all hover:stroke-[3.5]"
             @mouseenter="hoveredPoint = p"
           />
         </g>
