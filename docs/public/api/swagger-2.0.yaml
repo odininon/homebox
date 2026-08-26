@@ -1197,6 +1197,8 @@ definitions:
         type: string
       entityTypeId:
         type: string
+        x-nullable: true
+        x-omitempty: true
       manufacturer:
         maxLength: 255
         type: string
@@ -1729,6 +1731,8 @@ definitions:
         type: string
       entityTypeId:
         type: string
+        x-nullable: true
+        x-omitempty: true
       fields:
         items:
           $ref: '#/definitions/repo.EntityFieldData'
@@ -2194,6 +2198,7 @@ definitions:
         type: string
       timeValue:
         type: string
+        x-nullable: true
       type:
         type: string
     type: object

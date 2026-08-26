@@ -64,4 +64,3 @@ func TestNotifierRedirectSSRF_Guarded(t *testing.T) {
 	require.Error(t, err, "guarded: redirect to loopback must be refused and the send must fail")
 	assert.Equal(t, int32(0), victimHits(), "guarded: the blocked redirect target must never be reached")
 }
-

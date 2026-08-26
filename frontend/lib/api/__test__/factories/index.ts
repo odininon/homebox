@@ -44,7 +44,6 @@ function location(parentId: string | null = null): EntityCreate {
     parentId,
     name: faker.location.city(),
     description: faker.lorem.sentence(),
-    entityTypeId: "",
     quantity: 1,
     tagIds: [],
   };

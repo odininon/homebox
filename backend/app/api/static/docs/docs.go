@@ -5138,7 +5138,9 @@ const docTemplate = `{
                     "maxLength": 1000
                 },
                 "entityTypeId": {
-                    "type": "string"
+                    "type": "string",
+                    "x-nullable": true,
+                    "x-omitempty": true
                 },
                 "manufacturer": {
                     "type": "string",
@@ -5896,7 +5898,9 @@ const docTemplate = `{
                     "maxLength": 1000
                 },
                 "entityTypeId": {
-                    "type": "string"
+                    "type": "string",
+                    "x-nullable": true,
+                    "x-omitempty": true
                 },
                 "fields": {
                     "type": "array",
@@ -6577,7 +6581,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "timeValue": {
-                    "type": "string"
+                    "type": "string",
+                    "x-nullable": true
                 },
                 "type": {
                     "type": "string"

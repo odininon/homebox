@@ -5398,7 +5398,9 @@
                         "maxLength": 1000
                     },
                     "entityTypeId": {
-                        "type": "string"
+                        "type": "string",
+                        "x-omitempty": true,
+                        "nullable": true
                     },
                     "manufacturer": {
                         "type": "string",
@@ -6156,7 +6158,9 @@
                         "maxLength": 1000
                     },
                     "entityTypeId": {
-                        "type": "string"
+                        "type": "string",
+                        "x-omitempty": true,
+                        "nullable": true
                     },
                     "fields": {
                         "type": "array",
@@ -6837,7 +6841,8 @@
                         "type": "string"
                     },
                     "timeValue": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "type": {
                         "type": "string"
