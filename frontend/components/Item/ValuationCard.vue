@@ -12,11 +12,9 @@
   import PriceHistoryChart from "./PriceHistoryChart.vue";
   import MdiRefresh from "~icons/mdi/refresh";
   import MdiTrendingUp from "~icons/mdi/trending-up";
-  import MdiTrendingDown from "~icons/mdi/trending-down";
   import MdiPlus from "~icons/mdi/plus";
   import MdiDelete from "~icons/mdi/delete";
   import MdiAutoFix from "~icons/mdi/auto-fix";
-  import MdiOpenInNew from "~icons/mdi/open-in-new";
 
   const props = defineProps<{
     item: EntityOut;
@@ -119,7 +117,9 @@
     try {
       const { data, error } = await api.items.pricing.syncPrice(props.item.id);
       if (error) {
-        toast.error(t("items.toast.sync_price_failed", "Failed to sync market price. Check if TCGPlayer product ID is valid."));
+        toast.error(
+          t("items.toast.sync_price_failed", "Failed to sync market price. Check if TCGPlayer product ID is valid.")
+        );
         return;
       }
       if (data) {
@@ -161,7 +161,7 @@
       return;
     }
 
-    const { data, error } = await api.items.pricing.create(props.item.id, {
+    const { error } = await api.items.pricing.create(props.item.id, {
       price: manualPrice.value,
       recordedAt: new Date(manualDate.value || Date.now()),
       notes: manualNotes.value,
@@ -225,12 +225,7 @@
           <MdiRefresh class="size-3.5" :class="{ 'animate-spin': syncing }" />
           <span>{{ syncing ? $t("items.syncing", "Syncing...") : $t("items.sync_price", "Sync Price") }}</span>
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8 gap-1 text-xs"
-          @click="manualDialogOpen = true"
-        >
+        <Button size="sm" variant="outline" class="h-8 gap-1 text-xs" @click="manualDialogOpen = true">
           <MdiPlus class="size-3.5" />
           <span>{{ $t("items.add_price", "Add Snapshot") }}</span>
         </Button>
@@ -249,15 +244,9 @@
             Detected TCGPlayer link in custom field <strong>"{{ detectedTCGLink.fieldName }}"</strong>
           </span>
         </div>
-        <Button
-          size="sm"
-          variant="default"
-          class="h-7 gap-1 text-xs"
-          :disabled="autoDetecting"
-          @click="autoDetectLink"
-        >
+        <Button size="sm" variant="default" class="h-7 gap-1 text-xs" :disabled="autoDetecting" @click="autoDetectLink">
           <MdiRefresh v-if="autoDetecting" class="size-3 animate-spin" />
-          <span>{{ autoDetecting ? 'Enabling...' : 'Enable Automated Sync' }}</span>
+          <span>{{ autoDetecting ? "Enabling..." : "Enable Automated Sync" }}</span>
         </Button>
       </div>
 
@@ -272,7 +261,7 @@
             {{ formatCurrency(latestPrice) }}
           </div>
           <div v-if="item.priceTrackingSource" class="mt-0.5 text-[10px] text-muted-foreground">
-            Source: <span class="capitalize font-medium">{{ item.priceTrackingSource }}</span>
+            Source: <span class="font-medium capitalize">{{ item.priceTrackingSource }}</span>
           </div>
         </div>
 
@@ -300,7 +289,7 @@
           <div v-if="item.purchasePrice" class="mt-0.5 text-[10px] text-muted-foreground">
             Unit Cost: {{ formatCurrency(item.purchasePrice) }}
           </div>
-          <div v-else class="mt-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+          <div v-else class="mt-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
             $0 / Company Perk
           </div>
         </div>
@@ -315,17 +304,13 @@
             class="mt-1 flex items-baseline gap-1.5 text-lg font-bold"
             :class="gainLoss.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
           >
-            <span>{{ gainLoss.isPositive ? '+' : '' }}{{ formatCurrency(gainLoss.diff) }}</span>
+            <span>{{ gainLoss.isPositive ? "+" : "" }}{{ formatCurrency(gainLoss.diff) }}</span>
             <span v-if="item.purchasePrice > 0" class="text-xs font-semibold">
-              ({{ gainLoss.isPositive ? '+' : '' }}{{ gainLoss.pct.toFixed(1) }}%)
+              ({{ gainLoss.isPositive ? "+" : "" }}{{ gainLoss.pct.toFixed(1) }}%)
             </span>
           </div>
-          <div v-else class="mt-1 text-lg font-bold text-muted-foreground">
-            --
-          </div>
-          <div class="mt-0.5 text-[10px] text-muted-foreground">
-            Unrealized ROI
-          </div>
+          <div v-else class="mt-1 text-lg font-bold text-muted-foreground">--</div>
+          <div class="mt-0.5 text-[10px] text-muted-foreground">Unrealized ROI</div>
         </div>
       </div>
 
@@ -340,10 +325,10 @@
       <div class="pt-2">
         <button
           type="button"
-          class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           @click="showSnapshotTable = !showSnapshotTable"
         >
-          <span>{{ showSnapshotTable ? '▼ Hide' : '▶ Show' }} Snapshot History ({{ priceHistory.length }})</span>
+          <span>{{ showSnapshotTable ? "▼ Hide" : "▶ Show" }} Snapshot History ({{ priceHistory.length }})</span>
         </button>
 
         <div v-if="showSnapshotTable && priceHistory.length > 0" class="mt-3 overflow-x-auto rounded-lg border">
@@ -361,7 +346,13 @@
             <tbody class="divide-y">
               <tr v-for="entry in priceHistory" :key="entry.id" class="hover:bg-muted/20">
                 <td class="p-2.5 font-medium">
-                  {{ new Date(entry.recordedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) }}
+                  {{
+                    new Date(entry.recordedAt).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })
+                  }}
                 </td>
                 <td class="p-2.5 font-bold text-foreground">
                   {{ formatCurrency(entry.price) }}
@@ -377,8 +368,8 @@
                     {{ entry.source }}
                   </span>
                 </td>
-                <td class="p-2.5 text-muted-foreground max-w-xs truncate">
-                  {{ entry.notes || '--' }}
+                <td class="max-w-xs truncate p-2.5 text-muted-foreground">
+                  {{ entry.notes || "--" }}
                 </td>
                 <td class="p-2.5 text-right">
                   <Button
@@ -406,21 +397,11 @@
         <div class="space-y-4 py-2">
           <div class="space-y-1.5">
             <Label for="manual-price">Price Amount ($)</Label>
-            <Input
-              id="manual-price"
-              v-model.number="manualPrice"
-              type="number"
-              step="0.01"
-              placeholder="e.g. 294.99"
-            />
+            <Input id="manual-price" v-model.number="manualPrice" type="number" step="0.01" placeholder="e.g. 294.99" />
           </div>
           <div class="space-y-1.5">
             <Label for="manual-date">Date</Label>
-            <Input
-              id="manual-date"
-              v-model="manualDate"
-              type="date"
-            />
+            <Input id="manual-date" v-model="manualDate" type="date" />
           </div>
           <div class="space-y-1.5">
             <Label for="manual-notes">Notes (Optional)</Label>

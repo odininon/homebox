@@ -963,14 +963,10 @@
 
         <Card v-if="preferences.editorAdvancedView" class="overflow-visible shadow-xl">
           <div class="flex items-center justify-between px-4 py-5 sm:px-6">
-            <h3 class="text-lg font-medium leading-6">{{ $t("items.price_tracking", "Price Tracking & Market Valuation") }}</h3>
-            <Button
-              size="sm"
-              variant="outline"
-              type="button"
-              class="h-7 gap-1 text-xs"
-              @click="detectAndFillTCGLink"
-            >
+            <h3 class="text-lg font-medium leading-6">
+              {{ $t("items.price_tracking", "Price Tracking & Market Valuation") }}
+            </h3>
+            <Button size="sm" variant="outline" type="button" class="h-7 gap-1 text-xs" @click="detectAndFillTCGLink">
               <span>{{ $t("items.detect_from_fields", "Auto-Detect from Custom Fields") }}</span>
             </Button>
           </div>

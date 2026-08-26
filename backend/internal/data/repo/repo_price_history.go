@@ -20,15 +20,15 @@ func NewPriceHistoryRepository(db *ent.Client) *PriceHistoryRepository {
 }
 
 type PriceHistoryCreate struct {
-	Price          float64   `json:"price"`
-	MarketLow      float64   `json:"marketLow"`
-	MarketMid      float64   `json:"marketMid"`
-	MarketHigh     float64   `json:"marketHigh"`
-	DirectLow      float64   `json:"directLow"`
-	Source         string    `json:"source"`
-	SourceID       string    `json:"sourceId"`
-	RecordedAt     time.Time `json:"recordedAt"`
-	Notes          string    `json:"notes"`
+	Price      float64   `json:"price"`
+	MarketLow  float64   `json:"marketLow"`
+	MarketMid  float64   `json:"marketMid"`
+	MarketHigh float64   `json:"marketHigh"`
+	DirectLow  float64   `json:"directLow"`
+	Source     string    `json:"source"`
+	SourceID   string    `json:"sourceId"`
+	RecordedAt time.Time `json:"recordedAt"`
+	Notes      string    `json:"notes"`
 }
 
 type PriceHistoryEntry struct {
