@@ -160,9 +160,7 @@
         toast.error(t("items.toast.sync_price_failed", "Failed to sync market prices"));
         return;
       }
-      toast.success(
-        t("items.toast.sync_bulk_success", `Synced market prices for ${data?.updatedCount || 0} items`)
-      );
+      toast.success(t("items.toast.sync_bulk_success", `Synced market prices for ${data?.updatedCount || 0} items`));
       resetSelection();
     } catch {
       toast.error(t("items.toast.sync_price_failed", "Failed to sync market prices"));

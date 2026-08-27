@@ -20,8 +20,8 @@ func NewReReplace(regex string, replace string) ReReplace {
 
 func NewReDate(dateStr string) ReReplace {
 	return ReReplace{
-		Regex: regexp.MustCompile(fmt.Sprintf(`%s: string`, dateStr)),
-		Text:  fmt.Sprintf(`%s: Date | string`, dateStr),
+		Regex: regexp.MustCompile(fmt.Sprintf(`(%s\??:\s*)(string|\(string\s*\|\s*null\)|string\s*\|\s*null)`, dateStr)),
+		Text:  "${1}Date | ${2}",
 	}
 }
 

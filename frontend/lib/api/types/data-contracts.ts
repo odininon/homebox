@@ -756,7 +756,7 @@ export interface ProductSearchResult {
 }
 
 export interface APIKeyCreate {
-  expiresAt?: string | null;
+  expiresAt?: Date | string | null;
   /**
    * @minLength 1
    * @maxLength 255
@@ -766,7 +766,7 @@ export interface APIKeyCreate {
 
 export interface APIKeyCreatedOut {
   createdAt: Date | string;
-  expiresAt?: string | null;
+  expiresAt?: Date | string | null;
   id: string;
   lastUsedAt?: string | null;
   name: string;
@@ -776,7 +776,7 @@ export interface APIKeyCreatedOut {
 
 export interface APIKeyOut {
   createdAt: Date | string;
-  expiresAt?: string | null;
+  expiresAt?: Date | string | null;
   id: string;
   lastUsedAt?: string | null;
   name: string;
@@ -807,6 +807,8 @@ export interface EntityCreate {
   /** @maxLength 1000 */
   description: string;
   entityTypeId?: string | null;
+  insured?: boolean | null;
+  lifetimeWarranty?: boolean | null;
   /** @maxLength 255 */
   manufacturer?: string | null;
   /**
@@ -820,20 +822,25 @@ export interface EntityCreate {
    * @maxLength 255
    */
   name: string;
-  parentId?: string | null;
-  quantity: number;
-  purchasePrice?: number | null;
-  purchaseFrom?: string | null;
-  purchaseDate?: string | Date | null;
+  /**
+   * Additional fields
+   * @maxLength 1000
+   */
   notes?: string | null;
-  insured?: boolean | null;
-  lifetimeWarranty?: boolean | null;
-  warrantyDetails?: string | null;
+  parentId?: string | null;
   priceTrackingEnabled?: boolean | null;
-  priceTrackingSource?: string | null;
+  /** @maxLength 255 */
   priceTrackingId?: string | null;
+  /** @maxLength 255 */
+  priceTrackingSource?: string | null;
+  purchaseDate?: Date | string | null;
+  /** @maxLength 255 */
+  purchaseFrom?: string | null;
+  purchasePrice?: number | null;
+  quantity: number;
   /** Edges */
   tagIds: string[];
+  warrantyDetails?: string | null;
 }
 
 export interface EntityFieldData {
@@ -1169,21 +1176,13 @@ export interface GroupStatistics {
   totalItemPrice: number;
   totalItems: number;
   totalLocations: number;
+  totalMarketValue: number;
   totalTags: number;
+  totalTrackedCostBasis: number;
+  totalTrackedItems: number;
+  totalTrackedMarketValue: number;
   totalUsers: number;
   totalWithWarranty: number;
-  totalMarketValue?: number;
-  totalTrackedItems?: number;
-  totalTrackedCostBasis?: number;
-  totalTrackedMarketValue?: number;
-}
-
-export interface SyncPricesResponse {
-  updatedCount: number;
-}
-
-export interface SyncPricesBulkRequest {
-  entityIds: string[];
 }
 
 export interface GroupUpdate {
@@ -1549,6 +1548,14 @@ export interface ResetPasswordRequest {
 
 export interface ResultsRepoExportOut {
   items: ExportOut[];
+}
+
+export interface SyncPricesBulkRequest {
+  entityIds: string[];
+}
+
+export interface SyncPricesResponse {
+  updatedCount: number;
 }
 
 export interface TelemetryStatus {

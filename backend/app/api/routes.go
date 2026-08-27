@@ -233,7 +233,6 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 		r.Post("/entities/{id}/prices/auto-detect", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceAutoDetect(), userMW...))
 		r.Delete("/entities/{id}/prices/{price_id}", chain.ToHandlerFunc(v1Ctrl.HandleItemPriceDelete(), userMW...))
 
-
 		r.Get("/assets/{id}", chain.ToHandlerFunc(v1Ctrl.HandleAssetGet(), userMW...))
 
 		// Entity Templates

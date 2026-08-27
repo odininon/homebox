@@ -192,4 +192,3 @@ func (ctrl *V1Controller) HandleItemPricesSyncBulk() errchain.HandlerFunc {
 
 	return adapters.Action(fn, http.StatusOK)
 }
-

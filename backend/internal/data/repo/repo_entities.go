@@ -102,16 +102,16 @@ type (
 		Manufacturer string `json:"manufacturer" validate:"max=255" extensions:"x-nullable,x-omitempty"`
 
 		// Additional fields
-		Notes                string     `json:"notes" validate:"max=1000"`
-		Insured              bool       `json:"insured"`
-		LifetimeWarranty     bool       `json:"lifetimeWarranty"`
-		WarrantyDetails      string     `json:"warrantyDetails"`
-		PurchaseFrom         string     `json:"purchaseFrom" validate:"max=255"`
-		PurchasePrice        float64    `json:"purchasePrice"`
-		PurchaseDate         types.Date `json:"purchaseDate"`
-		PriceTrackingEnabled bool       `json:"priceTrackingEnabled"`
-		PriceTrackingSource  string     `json:"priceTrackingSource" validate:"max=255"`
-		PriceTrackingID      string     `json:"priceTrackingId" validate:"max=255"`
+		Notes                string     `json:"notes,omitempty"                validate:"max=1000"                 extensions:"x-nullable,x-omitempty"`
+		Insured              bool       `json:"insured,omitempty"              extensions:"x-nullable,x-omitempty"`
+		LifetimeWarranty     bool       `json:"lifetimeWarranty,omitempty"     extensions:"x-nullable,x-omitempty"`
+		WarrantyDetails      string     `json:"warrantyDetails,omitempty"      extensions:"x-nullable,x-omitempty"`
+		PurchaseFrom         string     `json:"purchaseFrom,omitempty"         validate:"max=255"                  extensions:"x-nullable,x-omitempty"`
+		PurchasePrice        float64    `json:"purchasePrice,omitempty"        extensions:"x-nullable,x-omitempty"`
+		PurchaseDate         types.Date `json:"purchaseDate,omitempty"         extensions:"x-nullable,x-omitempty"`
+		PriceTrackingEnabled bool       `json:"priceTrackingEnabled,omitempty" extensions:"x-nullable,x-omitempty"`
+		PriceTrackingSource  string     `json:"priceTrackingSource,omitempty"  validate:"max=255"                  extensions:"x-nullable,x-omitempty"`
+		PriceTrackingID      string     `json:"priceTrackingId,omitempty"      validate:"max=255"                  extensions:"x-nullable,x-omitempty"`
 
 		// Edges
 		TagIDs []uuid.UUID `json:"tagIds"`

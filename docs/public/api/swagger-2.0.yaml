@@ -1199,6 +1199,14 @@ definitions:
         type: string
         x-nullable: true
         x-omitempty: true
+      insured:
+        type: boolean
+        x-nullable: true
+        x-omitempty: true
+      lifetimeWarranty:
+        type: boolean
+        x-nullable: true
+        x-omitempty: true
       manufacturer:
         maxLength: 255
         type: string
@@ -1216,9 +1224,42 @@ definitions:
         maxLength: 255
         minLength: 1
         type: string
+      notes:
+        description: Additional fields
+        maxLength: 1000
+        type: string
+        x-nullable: true
+        x-omitempty: true
       parentId:
         type: string
         x-nullable: true
+      priceTrackingEnabled:
+        type: boolean
+        x-nullable: true
+        x-omitempty: true
+      priceTrackingId:
+        maxLength: 255
+        type: string
+        x-nullable: true
+        x-omitempty: true
+      priceTrackingSource:
+        maxLength: 255
+        type: string
+        x-nullable: true
+        x-omitempty: true
+      purchaseDate:
+        type: string
+        x-nullable: true
+        x-omitempty: true
+      purchaseFrom:
+        maxLength: 255
+        type: string
+        x-nullable: true
+        x-omitempty: true
+      purchasePrice:
+        type: number
+        x-nullable: true
+        x-omitempty: true
       quantity:
         type: number
       tagIds:
@@ -1226,6 +1267,10 @@ definitions:
         items:
           type: string
         type: array
+      warrantyDetails:
+        type: string
+        x-nullable: true
+        x-omitempty: true
     required:
     - name
     type: object
@@ -1866,8 +1911,16 @@ definitions:
         type: integer
       totalLocations:
         type: integer
+      totalMarketValue:
+        type: number
       totalTags:
         type: integer
+      totalTrackedCostBasis:
+        type: number
+      totalTrackedItems:
+        type: integer
+      totalTrackedMarketValue:
+        type: number
       totalUsers:
         type: integer
       totalWithWarranty:
@@ -2497,6 +2550,18 @@ definitions:
         items:
           $ref: '#/definitions/repo.ExportOut'
         type: array
+    type: object
+  v1.SyncPricesBulkRequest:
+    properties:
+      entityIds:
+        items:
+          type: string
+        type: array
+    type: object
+  v1.SyncPricesResponse:
+    properties:
+      updatedCount:
+        type: integer
     type: object
   v1.TelemetryStatus:
     properties:
@@ -3262,6 +3327,41 @@ paths:
       summary: Import Entities
       tags:
       - Entities
+  /v1/entities/prices/sync-all:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.SyncPricesResponse'
+      security:
+      - Bearer: []
+      summary: Sync All Tracked Items Market Prices for Group
+      tags:
+      - Item Pricing
+  /v1/entities/prices/sync-bulk:
+    post:
+      parameters:
+      - description: Entity IDs to sync
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/v1.SyncPricesBulkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.SyncPricesResponse'
+      security:
+      - Bearer: []
+      summary: Sync Selected Items Market Prices in Bulk
+      tags:
+      - Item Pricing
   /v1/entities/tree:
     get:
       parameters:

@@ -320,4 +320,3 @@ func (s *PricingService) SyncEntitiesBulk(ctx context.Context, gid uuid.UUID, en
 func (s *PricingService) SearchProducts(ctx context.Context, query string) ([]ProductSearchResult, error) {
 	return s.tcgClient.SearchProducts(ctx, query)
 }
-

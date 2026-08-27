@@ -444,6 +444,65 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/entities/prices/sync-all": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Sync All Tracked Items Market Prices for Group",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.SyncPricesResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/entities/prices/sync-bulk": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Sync Selected Items Market Prices in Bulk",
+                "parameters": [
+                    {
+                        "description": "Entity IDs to sync",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.SyncPricesBulkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.SyncPricesResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/entities/tree": {
             "get": {
                 "security": [
@@ -5142,6 +5201,16 @@ const docTemplate = `{
                     "x-nullable": true,
                     "x-omitempty": true
                 },
+                "insured": {
+                    "type": "boolean",
+                    "x-nullable": true,
+                    "x-omitempty": true
+                },
+                "lifetimeWarranty": {
+                    "type": "boolean",
+                    "x-nullable": true,
+                    "x-omitempty": true
+                },
                 "manufacturer": {
                     "type": "string",
                     "maxLength": 255,
@@ -5160,9 +5229,49 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 1
                 },
+                "notes": {
+                    "description": "Additional fields",
+                    "type": "string",
+                    "maxLength": 1000,
+                    "x-nullable": true,
+                    "x-omitempty": true
+                },
                 "parentId": {
                     "type": "string",
                     "x-nullable": true
+                },
+                "priceTrackingEnabled": {
+                    "type": "boolean",
+                    "x-nullable": true,
+                    "x-omitempty": true
+                },
+                "priceTrackingId": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "x-nullable": true,
+                    "x-omitempty": true
+                },
+                "priceTrackingSource": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "x-nullable": true,
+                    "x-omitempty": true
+                },
+                "purchaseDate": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "x-omitempty": true
+                },
+                "purchaseFrom": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "x-nullable": true,
+                    "x-omitempty": true
+                },
+                "purchasePrice": {
+                    "type": "number",
+                    "x-nullable": true,
+                    "x-omitempty": true
                 },
                 "quantity": {
                     "type": "number"
@@ -5173,6 +5282,11 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "warrantyDetails": {
+                    "type": "string",
+                    "x-nullable": true,
+                    "x-omitempty": true
                 }
             }
         },
@@ -6087,8 +6201,20 @@ const docTemplate = `{
                 "totalLocations": {
                     "type": "integer"
                 },
+                "totalMarketValue": {
+                    "type": "number"
+                },
                 "totalTags": {
                     "type": "integer"
+                },
+                "totalTrackedCostBasis": {
+                    "type": "number"
+                },
+                "totalTrackedItems": {
+                    "type": "integer"
+                },
+                "totalTrackedMarketValue": {
+                    "type": "number"
                 },
                 "totalUsers": {
                     "type": "integer"
@@ -7028,6 +7154,25 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/repo.ExportOut"
                     }
+                }
+            }
+        },
+        "v1.SyncPricesBulkRequest": {
+            "type": "object",
+            "properties": {
+                "entityIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1.SyncPricesResponse": {
+            "type": "object",
+            "properties": {
+                "updatedCount": {
+                    "type": "integer"
                 }
             }
         },

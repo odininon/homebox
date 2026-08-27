@@ -1,5 +1,8 @@
 <template>
-  <Card v-if="hasTrackedItems" class="relative overflow-hidden border border-primary/20 bg-gradient-to-br from-card to-primary/[0.03] p-5 shadow-sm">
+  <Card
+    v-if="hasTrackedItems"
+    class="relative overflow-hidden border border-primary/20 bg-gradient-to-br from-card to-primary/[0.03] p-5 shadow-sm"
+  >
     <div class="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
       <div class="flex items-center gap-3">
         <div class="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -25,13 +28,11 @@
           @click="syncAllPrices"
         >
           <MdiRefresh class="size-3.5" :class="{ 'animate-spin': syncing }" />
-          <span>{{ syncing ? $t("global.syncing", "Syncing...") : $t("items.sync_all_prices", "Sync All Prices") }}</span>
+          <span>{{
+            syncing ? $t("global.syncing", "Syncing...") : $t("items.sync_all_prices", "Sync All Prices")
+          }}</span>
         </Button>
-        <Button
-          size="sm"
-          class="h-8 gap-1.5 text-xs font-medium"
-          @click="openDialog(DialogID.MtgSearch)"
-        >
+        <Button size="sm" class="h-8 gap-1.5 text-xs font-medium" @click="openDialog(DialogID.MtgSearch)">
           <MdiCardsOutline class="size-3.5" />
           <span>{{ $t("menu.search_mtg", "Search MTG Sealed") }}</span>
         </Button>
@@ -42,7 +43,9 @@
     <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
       <!-- Total Market Value -->
       <div class="flex flex-col space-y-1">
-        <span class="text-xs font-medium text-muted-foreground">{{ $t("home.total_market_value", "Market Value") }}</span>
+        <span class="text-xs font-medium text-muted-foreground">{{
+          $t("home.total_market_value", "Market Value")
+        }}</span>
         <span class="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
           {{ formatCurrency(marketValue) }}
         </span>
@@ -58,19 +61,25 @@
 
       <!-- Unrealized Gain / Loss -->
       <div class="flex flex-col space-y-1">
-        <span class="text-xs font-medium text-muted-foreground">{{ $t("home.unrealized_gain_loss", "Unrealized Return") }}</span>
+        <span class="text-xs font-medium text-muted-foreground">{{
+          $t("home.unrealized_gain_loss", "Unrealized Return")
+        }}</span>
         <div v-if="gainLoss" class="flex items-center gap-1.5">
           <span
             class="text-xl font-bold tracking-tight sm:text-2xl"
             :class="gainLoss.isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
           >
-            {{ gainLoss.isPositive ? '+' : '' }}{{ formatCurrency(gainLoss.diff) }}
+            {{ gainLoss.isPositive ? "+" : "" }}{{ formatCurrency(gainLoss.diff) }}
           </span>
           <span
             class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold"
-            :class="gainLoss.isPositive ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'"
+            :class="
+              gainLoss.isPositive
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+            "
           >
-            {{ gainLoss.isPositive ? '▲' : '▼' }} {{ Math.abs(gainLoss.pct).toFixed(1) }}%
+            {{ gainLoss.isPositive ? "▲" : "▼" }} {{ Math.abs(gainLoss.pct).toFixed(1) }}%
           </span>
         </div>
         <span v-else class="text-xl font-bold tracking-tight text-muted-foreground sm:text-2xl">--</span>
@@ -78,13 +87,17 @@
 
       <!-- Tracked Items Count -->
       <div class="flex flex-col space-y-1">
-        <span class="text-xs font-medium text-muted-foreground">{{ $t("home.tracked_products", "Tracked Products") }}</span>
+        <span class="text-xs font-medium text-muted-foreground">{{
+          $t("home.tracked_products", "Tracked Products")
+        }}</span>
         <div class="flex items-center gap-2">
           <span class="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             {{ trackedCount }}
           </span>
-          <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-            <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span
+            class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+          >
+            <span class="size-1.5 animate-pulse rounded-full bg-emerald-500" />
             {{ $t("home.auto_sync", "Daily Sync") }}
           </span>
         </div>
@@ -160,7 +173,10 @@
         return;
       }
       toast.success(
-        t("items.toast.sync_all_success", `Successfully synced market prices for ${data?.updatedCount || 0} tracked items.`)
+        t(
+          "items.toast.sync_all_success",
+          `Successfully synced market prices for ${data?.updatedCount || 0} tracked items.`
+        )
       );
       emit("refresh");
     } catch {

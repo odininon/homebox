@@ -231,11 +231,7 @@ export function makeColumns({
                 : "bg-rose-500/10 text-rose-600 dark:text-rose-400",
             ].join(" "),
           },
-          [
-            isPos ? "+" : "",
-            h(Currency, { amount: diff }),
-            ` (${isPos ? "+" : ""}${pct.toFixed(0)}%)`,
-          ]
+          [isPos ? "+" : "", h(Currency, { amount: diff }), ` (${isPos ? "+" : ""}${pct.toFixed(0)}%)`]
         );
       },
     },

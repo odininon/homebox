@@ -471,6 +471,67 @@
                 }
             }
         },
+        "/v1/entities/prices/sync-all": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Sync All Tracked Items Market Prices for Group",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1.SyncPricesResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/entities/prices/sync-bulk": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Sync Selected Items Market Prices in Bulk",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1.SyncPricesBulkRequest"
+                            }
+                        }
+                    },
+                    "description": "Entity IDs to sync",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1.SyncPricesResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/entities/tree": {
             "get": {
                 "security": [
@@ -5402,6 +5463,16 @@
                         "x-omitempty": true,
                         "nullable": true
                     },
+                    "insured": {
+                        "type": "boolean",
+                        "x-omitempty": true,
+                        "nullable": true
+                    },
+                    "lifetimeWarranty": {
+                        "type": "boolean",
+                        "x-omitempty": true,
+                        "nullable": true
+                    },
                     "manufacturer": {
                         "type": "string",
                         "maxLength": 255,
@@ -5420,8 +5491,48 @@
                         "maxLength": 255,
                         "minLength": 1
                     },
+                    "notes": {
+                        "description": "Additional fields",
+                        "type": "string",
+                        "maxLength": 1000,
+                        "x-omitempty": true,
+                        "nullable": true
+                    },
                     "parentId": {
                         "type": "string",
+                        "nullable": true
+                    },
+                    "priceTrackingEnabled": {
+                        "type": "boolean",
+                        "x-omitempty": true,
+                        "nullable": true
+                    },
+                    "priceTrackingId": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "x-omitempty": true,
+                        "nullable": true
+                    },
+                    "priceTrackingSource": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "x-omitempty": true,
+                        "nullable": true
+                    },
+                    "purchaseDate": {
+                        "type": "string",
+                        "x-omitempty": true,
+                        "nullable": true
+                    },
+                    "purchaseFrom": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "x-omitempty": true,
+                        "nullable": true
+                    },
+                    "purchasePrice": {
+                        "type": "number",
+                        "x-omitempty": true,
                         "nullable": true
                     },
                     "quantity": {
@@ -5433,6 +5544,11 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    "warrantyDetails": {
+                        "type": "string",
+                        "x-omitempty": true,
+                        "nullable": true
                     }
                 }
             },
@@ -6347,8 +6463,20 @@
                     "totalLocations": {
                         "type": "integer"
                     },
+                    "totalMarketValue": {
+                        "type": "number"
+                    },
                     "totalTags": {
                         "type": "integer"
+                    },
+                    "totalTrackedCostBasis": {
+                        "type": "number"
+                    },
+                    "totalTrackedItems": {
+                        "type": "integer"
+                    },
+                    "totalTrackedMarketValue": {
+                        "type": "number"
                     },
                     "totalUsers": {
                         "type": "integer"
@@ -7288,6 +7416,25 @@
                         "items": {
                             "$ref": "#/components/schemas/repo.ExportOut"
                         }
+                    }
+                }
+            },
+            "v1.SyncPricesBulkRequest": {
+                "type": "object",
+                "properties": {
+                    "entityIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "v1.SyncPricesResponse": {
+                "type": "object",
+                "properties": {
+                    "updatedCount": {
+                        "type": "integer"
                     }
                 }
             },

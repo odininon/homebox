@@ -200,4 +200,3 @@ func (r *PriceHistoryRepository) GetTrackedEntitiesByIDs(ctx context.Context, gi
 		WithFields().
 		All(ctx)
 }
-

@@ -572,9 +572,7 @@
 
           // Auto-match set tag if it exists
           if (params.mtgProduct.groupName) {
-            const foundTag = tags.value.find(
-              t => t.name.toLowerCase() === params.mtgProduct!.groupName.toLowerCase()
-            );
+            const foundTag = tags.value.find(t => t.name.toLowerCase() === params.mtgProduct!.groupName.toLowerCase());
             if (foundTag) {
               form.tags = [foundTag.id];
             }

@@ -1,6 +1,6 @@
 <template>
   <Dialog :dialog-id="DialogID.MtgSearch">
-    <DialogContent class="w-full max-w-4xl max-h-[90vh] flex flex-col p-6">
+    <DialogContent class="flex max-h-[90vh] w-full max-w-4xl flex-col p-6">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2 text-xl">
           <MdiCardsOutline class="size-6 text-primary" />
@@ -12,16 +12,18 @@
       <div class="space-y-3 pt-2">
         <div class="flex items-center gap-2">
           <div class="relative flex-1">
-            <MdiMagnify class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
+            <MdiMagnify class="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               ref="searchInputRef"
               v-model="searchQuery"
-              class="pl-10 h-11 text-base"
-              :placeholder="$t('components.item.mtg_search.placeholder', 'Search booster boxes, bundles, commander decks, sets...')"
+              class="h-11 pl-10 text-base"
+              :placeholder="
+                $t('components.item.mtg_search.placeholder', 'Search booster boxes, bundles, commander decks, sets...')
+              "
               @keyup.enter="performSearch"
             />
           </div>
-          <Button class="h-11 px-5 gap-2" :disabled="searching" @click="performSearch">
+          <Button class="h-11 gap-2 px-5" :disabled="searching" @click="performSearch">
             <MdiLoading v-if="searching" class="size-4 animate-spin" />
             <span v-else>{{ $t("global.search", "Search") }}</span>
           </Button>
@@ -29,12 +31,14 @@
 
         <!-- Quick filter / suggestion tags -->
         <div class="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-          <span class="font-medium text-foreground/70">{{ $t("components.item.mtg_search.quick_tags", "Popular:") }}</span>
+          <span class="font-medium text-foreground/70">{{
+            $t("components.item.mtg_search.quick_tags", "Popular:")
+          }}</span>
           <button
             v-for="tag in popularTags"
             :key="tag"
             type="button"
-            class="rounded-full bg-secondary/70 hover:bg-primary/20 hover:text-primary px-2.5 py-0.5 transition-colors border border-transparent"
+            class="rounded-full border border-transparent bg-secondary/70 px-2.5 py-0.5 transition-colors hover:bg-primary/20 hover:text-primary"
             @click="quickSearch(tag)"
           >
             {{ tag }}
@@ -47,77 +51,102 @@
       <!-- Error State -->
       <div
         v-if="errorMessage"
-        class="flex items-center gap-2 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive text-sm"
+        class="flex items-center gap-2 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive"
       >
         <MdiAlertCircleOutline class="size-5 shrink-0" />
         <span>{{ errorMessage }}</span>
       </div>
 
       <!-- Results Section -->
-      <div class="flex-1 overflow-y-auto min-h-[300px] pr-1">
+      <div class="min-h-[300px] flex-1 overflow-y-auto pr-1">
         <!-- Loading State -->
-        <div v-if="searching" class="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+        <div v-if="searching" class="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
           <MdiLoading class="size-8 animate-spin text-primary" />
-          <p class="text-sm">{{ $t("components.item.mtg_search.searching", "Searching MTG catalog & live market prices...") }}</p>
+          <p class="text-sm">
+            {{ $t("components.item.mtg_search.searching", "Searching MTG catalog & live market prices...") }}
+          </p>
         </div>
 
         <!-- Empty / Initial State -->
         <div
           v-else-if="!results || results.length === 0"
-          class="flex flex-col items-center justify-center py-16 gap-2 text-center text-muted-foreground"
+          class="flex flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground"
         >
-          <MdiCardsOutline class="size-12 opacity-30 text-primary" />
+          <MdiCardsOutline class="size-12 text-primary opacity-30" />
           <p class="text-base font-medium text-foreground/80">
-            {{ searchQuery ? $t("components.item.mtg_search.no_results", "No sealed products found") : $t("components.item.mtg_search.start_search", "Search for MTG sealed booster boxes, cases, bundles, and decks") }}
+            {{
+              searchQuery
+                ? $t("components.item.mtg_search.no_results", "No sealed products found")
+                : $t(
+                    "components.item.mtg_search.start_search",
+                    "Search for MTG sealed booster boxes, cases, bundles, and decks"
+                  )
+            }}
           </p>
-          <p class="text-xs max-w-md">
-            {{ searchQuery ? $t("components.item.mtg_search.no_results_tip", "Try searching for set name (e.g. 'Modern Horizons 3', 'Innistrad', 'Commander Masters') or product type ('Play Booster Display', 'Bundle').") : $t("components.item.mtg_search.start_tip", "Select any product to instantly create an inventory item with box artwork, set tagging, and automatic TCGPlayer price tracking.") }}
+          <p class="max-w-md text-xs">
+            {{
+              searchQuery
+                ? $t(
+                    "components.item.mtg_search.no_results_tip",
+                    "Try searching for set name (e.g. 'Modern Horizons 3', 'Innistrad', 'Commander Masters') or product type ('Play Booster Display', 'Bundle')."
+                  )
+                : $t(
+                    "components.item.mtg_search.start_tip",
+                    "Select any product to instantly create an inventory item with box artwork, set tagging, and automatic TCGPlayer price tracking."
+                  )
+            }}
           </p>
         </div>
 
         <!-- Results Grid -->
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div v-else class="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div
             v-for="prod in results"
             :key="prod.productId"
-            class="group relative flex flex-col justify-between rounded-xl border bg-card p-3.5 shadow-sm transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+            class="group relative flex cursor-pointer flex-col justify-between rounded-xl border bg-card p-3.5 shadow-sm transition-all hover:border-primary/50 hover:shadow-md"
             @click="selectProduct(prod)"
           >
-            <div class="flex gap-3.5 items-start">
+            <div class="flex items-start gap-3.5">
               <!-- Box Art Image -->
-              <div class="size-16 shrink-0 rounded-lg border bg-muted/30 overflow-hidden flex items-center justify-center">
+              <div
+                class="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted/30"
+              >
                 <img
                   v-if="prod.imageUrl"
                   :src="prod.imageUrl"
                   :alt="prod.name"
-                  class="size-full object-contain group-hover:scale-105 transition-transform"
+                  class="size-full object-contain transition-transform group-hover:scale-105"
                   loading="lazy"
                 />
                 <MdiCardsOutline v-else class="size-8 text-muted-foreground/40" />
               </div>
 
               <!-- Product Details -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-1.5 mb-1">
-                  <span class="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground truncate max-w-[200px]">
+              <div class="min-w-0 flex-1">
+                <div class="mb-1 flex items-center gap-1.5">
+                  <span
+                    class="inline-flex max-w-[200px] items-center truncate rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground"
+                  >
                     {{ prod.groupName }}
                   </span>
                   <span class="text-[10px] text-muted-foreground">ID: {{ prod.productId }}</span>
                 </div>
-                <h4 class="font-semibold text-sm leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+                <h4
+                  class="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary"
+                >
                   {{ prod.name }}
                 </h4>
               </div>
             </div>
 
             <!-- Price & Action Footer -->
-            <div class="mt-3 pt-2.5 border-t flex items-center justify-between">
+            <div class="mt-3 flex items-center justify-between border-t pt-2.5">
               <div class="flex items-baseline gap-1.5">
                 <span class="text-xs text-muted-foreground">{{ $t("items.market_price", "Market:") }}</span>
                 <span v-if="prod.marketPrice > 0" class="text-base font-bold text-emerald-600 dark:text-emerald-400">
                   {{ formatCurrency(prod.marketPrice) }}
                 </span>
-                <span v-else class="text-xs text-muted-foreground italic">
+                <span v-else class="text-xs italic text-muted-foreground">
                   {{ $t("items.price_untracked", "N/A") }}
                 </span>
               </div>
@@ -128,13 +157,13 @@
                   :href="prod.url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="text-muted-foreground hover:text-foreground p-1 rounded transition-colors"
+                  class="rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
                   :title="$t('components.item.mtg_search.view_tcgplayer', 'View on TCGPlayer')"
                   @click.stop
                 >
                   <MdiOpenInNew class="size-4" />
                 </a>
-                <Button size="sm" class="h-8 text-xs font-medium gap-1" @click.stop="selectProduct(prod)">
+                <Button size="sm" class="h-8 gap-1 text-xs font-medium" @click.stop="selectProduct(prod)">
                   <MdiPlus class="size-3.5" />
                   <span>{{ $t("global.select", "Select & Import") }}</span>
                 </Button>
@@ -144,9 +173,13 @@
         </div>
       </div>
 
-      <DialogFooter class="mt-4 pt-2 border-t flex justify-between items-center sm:justify-between">
+      <DialogFooter class="mt-4 flex items-center justify-between border-t pt-2 sm:justify-between">
         <span class="text-xs text-muted-foreground">
-          {{ results && results.length > 0 ? $t("components.item.mtg_search.results_count", { count: results.length }) : "" }}
+          {{
+            results && results.length > 0
+              ? $t("components.item.mtg_search.results_count", { count: results.length })
+              : ""
+          }}
         </span>
         <Button variant="outline" @click="closeDialog(DialogID.MtgSearch)">
           {{ $t("global.cancel", "Cancel") }}
