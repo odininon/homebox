@@ -264,6 +264,7 @@ func (a *app) mountRoutes(r *chi.Mux, chain *errchain.ErrChain, repos *repo.AllR
 
 		r.Get("/products/search-from-barcode", chain.ToHandlerFunc(v1Ctrl.HandleProductSearchFromBarcode(a.conf.Barcode), userMW...))
 		r.Get("/products/search-pricing", chain.ToHandlerFunc(v1Ctrl.HandleProductPricingSearch(), userMW...))
+		r.Get("/products/image-proxy", chain.ToHandlerFunc(v1Ctrl.HandleProductImageProxy(), userMW...))
 
 		r.Get("/qrcode", chain.ToHandlerFunc(v1Ctrl.HandleGenerateQRCode(), assetMW...))
 		r.Get(

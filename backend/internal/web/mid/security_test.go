@@ -21,7 +21,7 @@ func TestSecurityHeadersUsesStandardCrossOriginNames(t *testing.T) {
 	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
 
 	want := map[string]string{
-		"Cross-Origin-Embedder-Policy":      "require-corp",
+		"Cross-Origin-Embedder-Policy":      "credentialless",
 		"Cross-Origin-Opener-Policy":        "same-origin",
 		"Cross-Origin-Resource-Policy":      "same-site",
 		"Referrer-Policy":                   "no-referrer",

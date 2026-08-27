@@ -112,11 +112,12 @@
                 class="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted/30"
               >
                 <img
-                  v-if="prod.imageUrl"
-                  :src="prod.imageUrl"
+                  v-if="prod.imageUrl && !failedImages[prod.productId]"
+                  :src="getProxiedImageUrl(prod.imageUrl)"
                   :alt="prod.name"
                   class="size-full object-contain transition-transform group-hover:scale-105"
                   loading="lazy"
+                  @error="onImageError(prod.productId)"
                 />
                 <MdiCardsOutline v-else class="size-8 text-muted-foreground/40" />
               </div>
@@ -242,6 +243,18 @@
     "Collector Booster",
   ];
 
+  const failedImages = ref<Record<number, boolean>>({});
+
+  function getProxiedImageUrl(url?: string): string {
+    if (!url) return "";
+    if (url.startsWith("data:") || url.startsWith("/api/")) return url;
+    return `/api/v1/products/image-proxy?url=${encodeURIComponent(url)}`;
+  }
+
+  function onImageError(productId: number) {
+    failedImages.value[productId] = true;
+  }
+
   async function performSearch() {
     const q = searchQuery.value.trim();
     if (!q) {
@@ -251,6 +264,7 @@
 
     searching.value = true;
     errorMessage.value = null;
+    failedImages.value = {};
     try {
       const { data, error } = await api.items.pricing.searchCatalog(q);
       if (error) {

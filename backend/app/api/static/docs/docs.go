@@ -2384,6 +2384,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/products/image-proxy": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Proxy external product images",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Image URL to proxy",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/v1/products/search-from-barcode": {
             "get": {
                 "security": [

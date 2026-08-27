@@ -2573,6 +2573,35 @@
                 }
             }
         },
+        "/v1/products/image-proxy": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "Item Pricing"
+                ],
+                "summary": "Proxy external product images",
+                "parameters": [
+                    {
+                        "description": "Image URL to proxy",
+                        "name": "url",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/v1/products/search-from-barcode": {
             "get": {
                 "security": [

@@ -581,7 +581,10 @@
           // Fetch box art image and attach
           if (params.mtgProduct.imageUrl) {
             try {
-              const res = await fetch(params.mtgProduct.imageUrl);
+              const proxyUrl = params.mtgProduct.imageUrl.startsWith("http")
+                ? `/api/v1/products/image-proxy?url=${encodeURIComponent(params.mtgProduct.imageUrl)}`
+                : params.mtgProduct.imageUrl;
+              const res = await fetch(proxyUrl);
               if (res.ok) {
                 const blob = await res.blob();
                 const file = new File([blob], `${params.mtgProduct.productId}_box.jpg`, {

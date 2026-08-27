@@ -4068,6 +4068,22 @@ paths:
       summary: Test Notifier
       tags:
       - Notifiers
+  /v1/products/image-proxy:
+    get:
+      parameters:
+      - description: Image URL to proxy
+        in: query
+        name: url
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+      security:
+      - Bearer: []
+      summary: Proxy external product images
+      tags:
+      - Item Pricing
   /v1/products/search-from-barcode:
     get:
       parameters:

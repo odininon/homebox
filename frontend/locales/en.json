@@ -218,6 +218,17 @@
                 "download": "Download",
                 "open_new_tab": "Open in new tab"
             },
+            "mtg_search": {
+                "initial_hint": "Search for Magic: The Gathering sealed booster displays, bundles, commander decks, or collector boxes above.",
+                "market_price": "Market:",
+                "no_results": "No MTG sealed products found matching \"{query}\". Try searching for the set name or booster type.",
+                "popular": "Popular:",
+                "results_count": "Showing {count} products",
+                "search_btn": "Search",
+                "search_placeholder": "Search set or product (e.g. Foundations, Modern Horizons 3, Collector Booster)",
+                "title": "Search MTG Sealed Products",
+                "view_tcgplayer": "View on TCGPlayer"
+            },
             "product_import": {
                 "barcode": "Product's barcode",
                 "db_source": "DB source",
