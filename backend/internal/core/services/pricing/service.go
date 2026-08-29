@@ -3,66 +3,38 @@ package pricing
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/repo"
-)
-
-var (
-	tcgProductURLRegex = regexp.MustCompile(`(?i)tcgplayer\.com/(?:product/|magic/product/show\?id=)(\d+)`)
-	pureNumberRegex    = regexp.MustCompile(`^\d{4,8}$`)
+	"github.com/sysadminsmedia/homebox/backend/pkgs/plugins"
 )
 
 type PricingService struct {
-	repos     *repo.AllRepos
-	tcgClient *TCGCSVClient
+	repos   *repo.AllRepos
+	plugins *plugins.Registry
 }
 
-func NewPricingService(repos *repo.AllRepos) *PricingService {
+func NewPricingService(repos *repo.AllRepos, registry *plugins.Registry) *PricingService {
 	return &PricingService{
-		repos:     repos,
-		tcgClient: NewTCGCSVClient(),
+		repos:   repos,
+		plugins: registry,
 	}
 }
 
-func (s *PricingService) ExtractTCGProductID(raw string) (int, bool) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return 0, false
+// DetectTrackingFromFields iterates over all registered pricing providers to detect a trackable product ID/URL.
+func (s *PricingService) DetectTrackingFromFields(fields []repo.EntityFieldData) (productID string, source string, fieldName string, ok bool) {
+	if s.plugins == nil {
+		return "", "", "", false
 	}
 
-	// Match direct numeric ID
-	if pureNumberRegex.MatchString(raw) {
-		id, err := strconv.Atoi(raw)
-		if err == nil && id > 0 {
-			return id, true
+	for _, provider := range s.plugins.AllPricingProviders() {
+		if pid, fname, found := provider.DetectTrackingFromFields(fields); found {
+			return pid, provider.ProviderID(), fname, true
 		}
 	}
-
-	// Match URL patterns
-	matches := tcgProductURLRegex.FindStringSubmatch(raw)
-	if len(matches) >= 2 {
-		id, err := strconv.Atoi(matches[1])
-		if err == nil && id > 0 {
-			return id, true
-		}
-	}
-
-	return 0, false
-}
-
-func (s *PricingService) DetectTCGPlayerLinkFromFields(fields []repo.EntityFieldData) (int, string, bool) {
-	for _, f := range fields {
-		if id, ok := s.ExtractTCGProductID(f.TextValue); ok {
-			return id, f.Name, true
-		}
-	}
-	return 0, "", false
+	return "", "", "", false
 }
 
 func (s *PricingService) GetPriceHistory(ctx context.Context, gid, entityID uuid.UUID) ([]repo.PriceHistoryEntry, error) {
@@ -83,18 +55,16 @@ func (s *PricingService) SyncEntityPrice(ctx context.Context, gid, entityID uuid
 		return nil, fmt.Errorf("entity not found: %w", err)
 	}
 
-	productID := 0
-	if entity.PriceTrackingID != "" {
-		if id, ok := s.ExtractTCGProductID(entity.PriceTrackingID); ok {
-			productID = id
-		}
-	}
+	source := entity.PriceTrackingSource
+	productID := entity.PriceTrackingID
 
-	// Fallback to searching custom fields if tracking ID is not set
-	if productID == 0 {
-		if id, _, found := s.DetectTCGPlayerLinkFromFields(entity.Fields); found {
-			productID = id
-			// Enable tracking on the entity
+	// Fallback to auto-detection from custom fields if not set
+	if productID == "" || source == "" {
+		if pid, src, _, found := s.DetectTrackingFromFields(entity.Fields); found {
+			productID = pid
+			source = src
+
+			// Enable tracking on entity
 			update := repo.EntityUpdate{
 				ID:                       entity.ID,
 				Name:                     entity.Name,
@@ -116,8 +86,8 @@ func (s *PricingService) SyncEntityPrice(ctx context.Context, gid, entityID uuid
 				AssetID:                  entity.AssetID,
 				SyncChildEntityLocations: entity.SyncChildEntityLocations,
 				PriceTrackingEnabled:     true,
-				PriceTrackingSource:      "tcgplayer",
-				PriceTrackingID:          strconv.Itoa(id),
+				PriceTrackingSource:      source,
+				PriceTrackingID:          productID,
 				TagIDs:                   nil,
 			}
 			if entity.EntityType != nil {
@@ -130,21 +100,22 @@ func (s *PricingService) SyncEntityPrice(ctx context.Context, gid, entityID uuid
 		}
 	}
 
-	if productID == 0 {
-		return nil, fmt.Errorf("no TCGPlayer product link or ID found for item %s", entity.Name)
+	if productID == "" || source == "" {
+		return nil, fmt.Errorf("no pricing provider or product ID configured for item %s", entity.Name)
 	}
 
-	priceRes, err := s.tcgClient.GetPrice(ctx, productID)
+	if s.plugins == nil {
+		return nil, fmt.Errorf("plugin registry not initialized")
+	}
+
+	provider, ok := s.plugins.GetPricingProvider(source)
+	if !ok {
+		return nil, fmt.Errorf("unknown pricing provider %q", source)
+	}
+
+	priceRes, err := provider.FetchPrice(ctx, productID)
 	if err != nil {
-		return nil, fmt.Errorf("fetching price from TCGPlayer: %w", err)
-	}
-
-	notes := ""
-	if priceRes.ProductName != "" {
-		notes = priceRes.ProductName
-		if priceRes.GroupName != "" {
-			notes = fmt.Sprintf("%s (%s)", priceRes.ProductName, priceRes.GroupName)
-		}
+		return nil, fmt.Errorf("fetching price from provider %q: %w", source, err)
 	}
 
 	entry, err := s.repos.PriceHistory.RecordSnapshot(
@@ -155,10 +126,10 @@ func (s *PricingService) SyncEntityPrice(ctx context.Context, gid, entityID uuid
 		priceRes.MidPrice,
 		priceRes.HighPrice,
 		priceRes.DirectLowPrice,
-		"tcgplayer",
-		strconv.Itoa(productID),
+		source,
+		productID,
 		priceRes.RecordedAt,
-		notes,
+		priceRes.Notes,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("recording price snapshot: %w", err)
@@ -173,7 +144,7 @@ func (s *PricingService) AutoDetectEntityTracking(ctx context.Context, gid, enti
 		return nil, false, err
 	}
 
-	productID, _, found := s.DetectTCGPlayerLinkFromFields(entity.Fields)
+	productID, source, _, found := s.DetectTrackingFromFields(entity.Fields)
 	if !found {
 		return &entity, false, nil
 	}
@@ -199,8 +170,8 @@ func (s *PricingService) AutoDetectEntityTracking(ctx context.Context, gid, enti
 		AssetID:                  entity.AssetID,
 		SyncChildEntityLocations: entity.SyncChildEntityLocations,
 		PriceTrackingEnabled:     true,
-		PriceTrackingSource:      "tcgplayer",
-		PriceTrackingID:          strconv.Itoa(productID),
+		PriceTrackingSource:      source,
+		PriceTrackingID:          productID,
 		TagIDs:                   nil,
 	}
 	if entity.EntityType != nil {
@@ -215,7 +186,7 @@ func (s *PricingService) AutoDetectEntityTracking(ctx context.Context, gid, enti
 		return nil, false, err
 	}
 
-	// Trigger initial price fetch asynchronously or synchronously
+	// Trigger initial price fetch
 	_, _ = s.SyncEntityPrice(ctx, gid, entityID)
 	refreshed, err := s.repos.Entities.GetOne(ctx, entityID)
 	if err == nil {
@@ -226,16 +197,16 @@ func (s *PricingService) AutoDetectEntityTracking(ctx context.Context, gid, enti
 }
 
 func (s *PricingService) syncEntitiesList(ctx context.Context, entities []*ent.Entity) (int, error) {
+	if s.plugins == nil {
+		return 0, nil
+	}
+
 	updated := 0
 	for _, e := range entities {
-		productID := 0
-		if e.PriceTrackingID != "" {
-			if id, ok := s.ExtractTCGProductID(e.PriceTrackingID); ok {
-				productID = id
-			}
-		}
+		source := e.PriceTrackingSource
+		productID := e.PriceTrackingID
 
-		if productID == 0 && len(e.Edges.Fields) > 0 {
+		if (source == "" || productID == "") && len(e.Edges.Fields) > 0 {
 			fields := make([]repo.EntityFieldData, len(e.Edges.Fields))
 			for i, f := range e.Edges.Fields {
 				fields[i] = repo.EntityFieldData{
@@ -243,27 +214,26 @@ func (s *PricingService) syncEntitiesList(ctx context.Context, entities []*ent.E
 					TextValue: f.TextValue,
 				}
 			}
-			if id, _, found := s.DetectTCGPlayerLinkFromFields(fields); found {
-				productID = id
+			if pid, src, _, found := s.DetectTrackingFromFields(fields); found {
+				productID = pid
+				source = src
 			}
 		}
 
-		if productID == 0 {
+		if source == "" || productID == "" {
 			continue
 		}
 
-		priceRes, err := s.tcgClient.GetPrice(ctx, productID)
+		provider, ok := s.plugins.GetPricingProvider(source)
+		if !ok {
+			log.Warn().Str("entity_id", e.ID.String()).Str("source", source).Msg("unknown pricing provider for entity")
+			continue
+		}
+
+		priceRes, err := provider.FetchPrice(ctx, productID)
 		if err != nil {
-			log.Warn().Err(err).Str("entity_id", e.ID.String()).Int("product_id", productID).Msg("failed to fetch price for tracked entity")
+			log.Warn().Err(err).Str("entity_id", e.ID.String()).Str("product_id", productID).Str("source", source).Msg("failed to fetch price for tracked entity")
 			continue
-		}
-
-		notes := ""
-		if priceRes.ProductName != "" {
-			notes = priceRes.ProductName
-			if priceRes.GroupName != "" {
-				notes = fmt.Sprintf("%s (%s)", priceRes.ProductName, priceRes.GroupName)
-			}
 		}
 
 		_, err = s.repos.PriceHistory.RecordSnapshot(
@@ -274,10 +244,10 @@ func (s *PricingService) syncEntitiesList(ctx context.Context, entities []*ent.E
 			priceRes.MidPrice,
 			priceRes.HighPrice,
 			priceRes.DirectLowPrice,
-			"tcgplayer",
-			strconv.Itoa(productID),
+			source,
+			productID,
 			priceRes.RecordedAt,
-			notes,
+			priceRes.Notes,
 		)
 		if err != nil {
 			log.Warn().Err(err).Str("entity_id", e.ID.String()).Msg("failed to record price snapshot")
@@ -317,6 +287,29 @@ func (s *PricingService) SyncEntitiesBulk(ctx context.Context, gid uuid.UUID, en
 	return s.syncEntitiesList(ctx, entities)
 }
 
-func (s *PricingService) SearchProducts(ctx context.Context, query string) ([]ProductSearchResult, error) {
-	return s.tcgClient.SearchProducts(ctx, query)
+func (s *PricingService) SearchProducts(ctx context.Context, query string, providerIDs ...string) ([]ProductSearchResult, error) {
+	if s.plugins == nil {
+		return nil, nil
+	}
+
+	var providers []plugins.PricingProvider
+	if len(providerIDs) > 0 && providerIDs[0] != "" {
+		if p, ok := s.plugins.GetPricingProvider(providerIDs[0]); ok {
+			providers = append(providers, p)
+		}
+	} else {
+		providers = s.plugins.AllPricingProviders()
+	}
+
+	var allResults []ProductSearchResult
+	for _, p := range providers {
+		res, err := p.SearchProducts(ctx, query)
+		if err != nil {
+			log.Warn().Err(err).Str("provider", p.ProviderID()).Msg("product search error")
+			continue
+		}
+		allResults = append(allResults, res...)
+	}
+
+	return allResults, nil
 }

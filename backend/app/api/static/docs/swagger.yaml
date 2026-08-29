@@ -1091,6 +1091,19 @@ definitions:
     - StatusRunning
     - StatusCompleted
     - StatusFailed
+  plugins.PluginInfo:
+    properties:
+      capabilities:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   pricing.ProductSearchResult:
     properties:
       cleanName:
@@ -1106,7 +1119,9 @@ definitions:
       name:
         type: string
       productId:
-        type: integer
+        type: string
+      provider:
+        type: string
       url:
         type: string
     type: object
@@ -4068,6 +4083,22 @@ paths:
       summary: Test Notifier
       tags:
       - Notifiers
+  /v1/plugins:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/plugins.PluginInfo'
+            type: array
+      security:
+      - Bearer: []
+      summary: List installed plugins and their capabilities
+      tags:
+      - Plugins
   /v1/products/image-proxy:
     get:
       parameters:
@@ -4113,6 +4144,10 @@ paths:
         name: q
         required: true
         type: string
+      - description: Provider ID (e.g. tcgplayer)
+        in: query
+        name: provider
+        type: string
       produces:
       - application/json
       responses:
@@ -4124,7 +4159,7 @@ paths:
             type: array
       security:
       - Bearer: []
-      summary: Search Products in TCG Catalog
+      summary: Search Products in Pricing Catalogs
       tags:
       - Item Pricing
   /v1/qrcode:

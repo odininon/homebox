@@ -24,16 +24,7 @@
             </TooltipContent>
           </Tooltip>
 
-          <Tooltip v-if="!selectedEntityType?.isLocation">
-            <TooltipTrigger>
-              <Button variant="outline" :disabled="loading" size="icon" @click="openMtgSearchDialog()">
-                <MdiCardsOutline class="size-5 text-primary" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{{ $t("components.item.mtg_search.button_tooltip", "Search MTG Sealed Products") }}</p>
-            </TooltipContent>
-          </Tooltip>
+          <PluginSlot v-if="!selectedEntityType?.isLocation" name="entity:create:actions" :context="{ loading }" />
 
           <ButtonGroup>
             <Tooltip>
@@ -251,7 +242,7 @@
   import { useLocationStore } from "~~/stores/locations";
   import MdiBarcode from "~icons/mdi/barcode";
   import MdiBarcodeScan from "~icons/mdi/barcode-scan";
-  import MdiCardsOutline from "~icons/mdi/cards-outline";
+  import PluginSlot from "~/components/Plugin/Slot.vue";
   import MdiPackageVariant from "~icons/mdi/package-variant";
   import MdiPackageVariantClosed from "~icons/mdi/package-variant-closed";
   import MdiFileDocumentOutline from "~icons/mdi/file-document-outline";
@@ -813,9 +804,5 @@
 
   function openBarcodeDialog() {
     openDialog(DialogID.ProductImport);
-  }
-
-  function openMtgSearchDialog() {
-    openDialog(DialogID.MtgSearch);
   }
 </script>

@@ -126,22 +126,24 @@ func (ctrl *V1Controller) HandleItemPriceDelete() errchain.HandlerFunc {
 }
 
 type ProductPricingSearchQuery struct {
-	Query string `schema:"q"`
+	Query    string `schema:"q"`
+	Provider string `schema:"provider"`
 }
 
 // HandleProductPricingSearch godoc
 //
-//	@Summary	Search Products in TCG Catalog
+//	@Summary	Search Products in Pricing Catalogs
 //	@Tags		Item Pricing
 //	@Produce	json
-//	@Param		q	query	string	true	"Search query"
-//	@Success	200	{array}	pricing.ProductSearchResult
+//	@Param		q			query	string	true	"Search query"
+//	@Param		provider	query	string	false	"Provider ID (e.g. tcgplayer)"
+//	@Success	200			{array}	pricing.ProductSearchResult
 //	@Router		/v1/products/search-pricing [GET]
 //	@Security	Bearer
 func (ctrl *V1Controller) HandleProductPricingSearch() errchain.HandlerFunc {
 	fn := func(r *http.Request, q ProductPricingSearchQuery) ([]pricing.ProductSearchResult, error) {
 		auth := services.NewContext(r.Context())
-		return ctrl.svc.Pricing.SearchProducts(auth, q.Query)
+		return ctrl.svc.Pricing.SearchProducts(auth, q.Query, q.Provider)
 	}
 
 	return adapters.Query(fn, http.StatusOK)

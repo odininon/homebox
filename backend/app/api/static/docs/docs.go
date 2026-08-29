@@ -2384,6 +2384,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/plugins": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Plugins"
+                ],
+                "summary": "List installed plugins and their capabilities",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/plugins.PluginInfo"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/products/image-proxy": {
             "get": {
                 "security": [
@@ -2459,7 +2486,7 @@ const docTemplate = `{
                 "tags": [
                     "Item Pricing"
                 ],
-                "summary": "Search Products in TCG Catalog",
+                "summary": "Search Products in Pricing Catalogs",
                 "parameters": [
                     {
                         "type": "string",
@@ -2467,6 +2494,12 @@ const docTemplate = `{
                         "name": "q",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Provider ID (e.g. tcgplayer)",
+                        "name": "provider",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -5066,6 +5099,26 @@ const docTemplate = `{
                 "StatusFailed"
             ]
         },
+        "plugins.PluginInfo": {
+            "type": "object",
+            "properties": {
+                "capabilities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "pricing.ProductSearchResult": {
             "type": "object",
             "properties": {
@@ -5088,7 +5141,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "productId": {
-                    "type": "integer"
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
                 },
                 "url": {
                     "type": "string"

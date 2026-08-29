@@ -4,7 +4,7 @@
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2 text-xl">
           <MdiCardsOutline class="size-6 text-primary" />
-          <span>{{ $t("components.item.mtg_search.title", "Search MTG Sealed Products") }}</span>
+          <span>{{ $t("components.item.mtg_search.title") }}</span>
         </DialogTitle>
       </DialogHeader>
 
@@ -17,23 +17,19 @@
               ref="searchInputRef"
               v-model="searchQuery"
               class="h-11 pl-10 text-base"
-              :placeholder="
-                $t('components.item.mtg_search.placeholder', 'Search booster boxes, bundles, commander decks, sets...')
-              "
+              :placeholder="$t('components.item.mtg_search.placeholder')"
               @keyup.enter="performSearch"
             />
           </div>
           <Button class="h-11 gap-2 px-5" :disabled="searching" @click="performSearch">
             <MdiLoading v-if="searching" class="size-4 animate-spin" />
-            <span v-else>{{ $t("global.search", "Search") }}</span>
+            <span v-else>{{ $t("global.search") }}</span>
           </Button>
         </div>
 
         <!-- Quick filter / suggestion tags -->
         <div class="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-          <span class="font-medium text-foreground/70">{{
-            $t("components.item.mtg_search.quick_tags", "Popular:")
-          }}</span>
+          <span class="font-medium text-foreground/70">{{ $t("components.item.mtg_search.quick_tags") }}</span>
           <button
             v-for="tag in popularTags"
             :key="tag"
@@ -63,7 +59,7 @@
         <div v-if="searching" class="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
           <MdiLoading class="size-8 animate-spin text-primary" />
           <p class="text-sm">
-            {{ $t("components.item.mtg_search.searching", "Searching MTG catalog & live market prices...") }}
+            {{ $t("components.item.mtg_search.searching") }}
           </p>
         </div>
 
@@ -75,25 +71,12 @@
           <MdiCardsOutline class="size-12 text-primary opacity-30" />
           <p class="text-base font-medium text-foreground/80">
             {{
-              searchQuery
-                ? $t("components.item.mtg_search.no_results", "No sealed products found")
-                : $t(
-                    "components.item.mtg_search.start_search",
-                    "Search for MTG sealed booster boxes, cases, bundles, and decks"
-                  )
+              searchQuery ? $t("components.item.mtg_search.no_results") : $t("components.item.mtg_search.start_search")
             }}
           </p>
           <p class="max-w-md text-xs">
             {{
-              searchQuery
-                ? $t(
-                    "components.item.mtg_search.no_results_tip",
-                    "Try searching for set name (e.g. 'Modern Horizons 3', 'Innistrad', 'Commander Masters') or product type ('Play Booster Display', 'Bundle')."
-                  )
-                : $t(
-                    "components.item.mtg_search.start_tip",
-                    "Select any product to instantly create an inventory item with box artwork, set tagging, and automatic TCGPlayer price tracking."
-                  )
+              searchQuery ? $t("components.item.mtg_search.no_results_tip") : $t("components.item.mtg_search.start_tip")
             }}
           </p>
         </div>
@@ -143,12 +126,12 @@
             <!-- Price & Action Footer -->
             <div class="mt-3 flex items-center justify-between border-t pt-2.5">
               <div class="flex items-baseline gap-1.5">
-                <span class="text-xs text-muted-foreground">{{ $t("items.market_price", "Market:") }}</span>
+                <span class="text-xs text-muted-foreground">{{ $t("items.market_price") }}</span>
                 <span v-if="prod.marketPrice > 0" class="text-base font-bold text-emerald-600 dark:text-emerald-400">
                   {{ formatCurrency(prod.marketPrice) }}
                 </span>
                 <span v-else class="text-xs italic text-muted-foreground">
-                  {{ $t("items.price_untracked", "N/A") }}
+                  {{ $t("items.price_untracked") }}
                 </span>
               </div>
 
@@ -159,14 +142,14 @@
                   target="_blank"
                   rel="noopener noreferrer"
                   class="rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-                  :title="$t('components.item.mtg_search.view_tcgplayer', 'View on TCGPlayer')"
+                  :title="$t('components.item.mtg_search.view_tcgplayer')"
                   @click.stop
                 >
                   <MdiOpenInNew class="size-4" />
                 </a>
                 <Button size="sm" class="h-8 gap-1 text-xs font-medium" @click.stop="selectProduct(prod)">
                   <MdiPlus class="size-3.5" />
-                  <span>{{ $t("global.select", "Select & Import") }}</span>
+                  <span>{{ $t("components.item.mtg_search.select_and_import") }}</span>
                 </Button>
               </div>
             </div>
@@ -183,7 +166,7 @@
           }}
         </span>
         <Button variant="outline" @click="closeDialog(DialogID.MtgSearch)">
-          {{ $t("global.cancel", "Cancel") }}
+          {{ $t("global.cancel") }}
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -243,7 +226,7 @@
     "Collector Booster",
   ];
 
-  const failedImages = ref<Record<number, boolean>>({});
+  const failedImages = ref<Record<string | number, boolean>>({});
 
   function getProxiedImageUrl(url?: string): string {
     if (!url) return "";
@@ -251,7 +234,7 @@
     return `/api/v1/products/image-proxy?url=${encodeURIComponent(url)}`;
   }
 
-  function onImageError(productId: number) {
+  function onImageError(productId: string | number) {
     failedImages.value[productId] = true;
   }
 
@@ -268,7 +251,7 @@
     try {
       const { data, error } = await api.items.pricing.searchCatalog(q);
       if (error) {
-        errorMessage.value = t("errors.api_failure", "Failed to search catalog: ") + error;
+        errorMessage.value = t("errors.api_failure") + error;
         results.value = [];
       } else {
         results.value = data || [];

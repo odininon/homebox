@@ -1,0 +1,97 @@
+{
+  "components": {
+    "item": {
+      "valuation": {
+        "title": "Magic & Sealed Valuation",
+        "tracked_via": "Tracked via {source}",
+        "detected_hint": "Auto-detected TCGPlayer link in \"{field}\"",
+        "untracked_hint": "Enable live price tracking or add manual valuation snapshots."
+      },
+      "mtg_search": {
+        "title": "Search MTG Sealed Products",
+        "button_tooltip": "Search MTG Sealed Products",
+        "placeholder": "Search booster boxes, bundles, commander decks, sets...",
+        "quick_tags": "Popular:",
+        "searching": "Searching MTG catalog & live market prices...",
+        "no_results": "No sealed products found",
+        "start_search": "Search for MTG sealed booster boxes, cases, bundles, and decks",
+        "no_results_tip": "Try searching for set name (e.g. 'Modern Horizons 3', 'Innistrad', 'Commander Masters') or product type ('Play Booster Display', 'Bundle').",
+        "start_tip": "Select any product to instantly create an inventory item with box artwork, set tagging, and automatic TCGPlayer price tracking.",
+        "view_tcgplayer": "View on TCGPlayer",
+        "select_and_import": "Select & Import",
+        "results_count": "{count, plural, one {# result found} other {# results found}}"
+      },
+      "price_chart": {
+        "title": "Price History Trend",
+        "no_data": "No price history snapshots recorded yet",
+        "no_data_hint": "Snapshots will appear as market prices are tracked.",
+        "single_point": "Single snapshot on {date}",
+        "cost_basis": "Cost"
+      }
+    }
+  },
+  "items": {
+    "market_unit_price": "Market Unit Price",
+    "synced_at": "Synced {date}",
+    "total_market_value": "Total Market Value (Qty: {qty})",
+    "cost_basis": "Total Cost Basis",
+    "unrealized_return": "Unrealized Return",
+    "hide_history_table": "Hide Price History Table",
+    "show_history_table": "Show Price History ({count} snapshots)",
+    "add_manual_snapshot_title": "Add Manual Price Snapshot",
+    "price_value": "Market / Valuation Price ($)",
+    "snapshot_date": "Snapshot Date",
+    "snapshot_notes": "Notes / Context",
+    "enable_and_sync": "Enable & Sync",
+    "sync_price": "Sync Price",
+    "add_price_snapshot": "Add Snapshot",
+    "price_tracking_section": "Price Tracking & Valuation",
+    "price_tracking_subtitle": "Track live sealed product market prices from TCGPlayer",
+    "search_mtg_catalog": "Search MTG Catalog",
+    "detect_from_fields": "Auto-Detect from Fields",
+    "enable_price_tracking": "Enable Automated Price Tracking",
+    "price_tracking_source": "Price Source (e.g. tcgplayer)",
+    "price_tracking_id": "TCGPlayer Product ID or URL",
+    "current_market_price": "Current Market Price ($)",
+    "market_price": "Market:",
+    "price_untracked": "N/A",
+    "sync_all_prices": "Sync All Prices",
+    "toast": {
+      "failed_load_prices": "Failed to load price history",
+      "failed_sync_price": "Failed to sync price with TCGPlayer",
+      "price_synced": "Market price updated to {price}",
+      "failed_detect_tcg": "Failed to auto-detect TCGPlayer product ID",
+      "tcg_detected": "TCGPlayer product ID detected and price synced",
+      "failed_create_price": "Failed to record price snapshot",
+      "price_created": "Price snapshot recorded successfully",
+      "failed_delete_price": "Failed to delete price snapshot",
+      "price_deleted": "Price snapshot deleted",
+      "failed_sync_all": "Failed to sync portfolio prices",
+      "sync_all_success": "Successfully synced prices for {count, plural, one {# item} other {# items}}"
+    }
+  },
+  "home": {
+    "portfolio_title": "MTG Sealed Portfolio & Valuation",
+    "portfolio_subtitle": "Live market tracking powered by TCGPlayer",
+    "total_market_value": "Market Value",
+    "cost_basis": "Cost Basis",
+    "unrealized_gain_loss": "Unrealized Return",
+    "tracked_products": "Tracked Products",
+    "live_tracking": "Live"
+  },
+  "menu": {
+    "search_mtg": "MTG Sealed"
+  },
+  "global": {
+    "syncing": "Syncing...",
+    "detecting": "Detecting...",
+    "date": "Date",
+    "price": "Price",
+    "source": "Source",
+    "notes": "Notes",
+    "actions": "Actions"
+  },
+  "errors": {
+    "api_failure": "Failed to search catalog: "
+  }
+}

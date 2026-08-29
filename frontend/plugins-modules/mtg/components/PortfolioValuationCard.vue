@@ -10,10 +10,10 @@
         </div>
         <div>
           <h3 class="text-base font-semibold text-foreground">
-            {{ $t("home.portfolio_title", "MTG Sealed Portfolio & Valuation") }}
+            {{ $t("home.portfolio_title") }}
           </h3>
           <p class="text-xs text-muted-foreground">
-            {{ $t("home.portfolio_subtitle", "Live market tracking powered by TCGPlayer") }}
+            {{ $t("home.portfolio_subtitle") }}
           </p>
         </div>
       </div>
@@ -28,13 +28,11 @@
           @click="syncAllPrices"
         >
           <MdiRefresh class="size-3.5" :class="{ 'animate-spin': syncing }" />
-          <span>{{
-            syncing ? $t("global.syncing", "Syncing...") : $t("items.sync_all_prices", "Sync All Prices")
-          }}</span>
+          <span>{{ syncing ? $t("global.syncing") : $t("items.sync_all_prices") }}</span>
         </Button>
         <Button size="sm" class="h-8 gap-1.5 text-xs font-medium" @click="openDialog(DialogID.MtgSearch)">
           <MdiCardsOutline class="size-3.5" />
-          <span>{{ $t("menu.search_mtg", "Search MTG Sealed") }}</span>
+          <span>{{ $t("menu.search_mtg") }}</span>
         </Button>
       </div>
     </div>
@@ -43,9 +41,7 @@
     <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
       <!-- Total Market Value -->
       <div class="flex flex-col space-y-1">
-        <span class="text-xs font-medium text-muted-foreground">{{
-          $t("home.total_market_value", "Market Value")
-        }}</span>
+        <span class="text-xs font-medium text-muted-foreground">{{ $t("home.total_market_value") }}</span>
         <span class="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
           {{ formatCurrency(marketValue) }}
         </span>
@@ -53,7 +49,7 @@
 
       <!-- Total Cost Basis -->
       <div class="flex flex-col space-y-1">
-        <span class="text-xs font-medium text-muted-foreground">{{ $t("home.cost_basis", "Cost Basis") }}</span>
+        <span class="text-xs font-medium text-muted-foreground">{{ $t("home.cost_basis") }}</span>
         <span class="text-xl font-bold tracking-tight text-muted-foreground sm:text-2xl">
           {{ formatCurrency(costBasis) }}
         </span>
@@ -61,9 +57,7 @@
 
       <!-- Unrealized Gain / Loss -->
       <div class="flex flex-col space-y-1">
-        <span class="text-xs font-medium text-muted-foreground">{{
-          $t("home.unrealized_gain_loss", "Unrealized Return")
-        }}</span>
+        <span class="text-xs font-medium text-muted-foreground">{{ $t("home.unrealized_gain_loss") }}</span>
         <div v-if="gainLoss" class="flex items-center gap-1.5">
           <span
             class="text-xl font-bold tracking-tight sm:text-2xl"
@@ -87,9 +81,7 @@
 
       <!-- Tracked Items Count -->
       <div class="flex flex-col space-y-1">
-        <span class="text-xs font-medium text-muted-foreground">{{
-          $t("home.tracked_products", "Tracked Products")
-        }}</span>
+        <span class="text-xs font-medium text-muted-foreground">{{ $t("home.tracked_products") }}</span>
         <div class="flex items-center gap-2">
           <span class="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             {{ trackedCount }}
@@ -98,7 +90,7 @@
             class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
           >
             <span class="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-            {{ $t("home.auto_sync", "Daily Sync") }}
+            <span>{{ $t("home.live_tracking") }}</span>
           </span>
         </div>
       </div>
@@ -109,30 +101,36 @@
 <script setup lang="ts">
   import { computed, ref, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
+  import { toast } from "@/components/ui/sonner";
+  import type { GroupStatistics } from "~~/lib/api/types/data-contracts";
+  import { useFormatCurrency } from "~/composables/use-formatters";
+  import { useDialog } from "@/components/ui/dialog-provider";
+  import { DialogID } from "~/components/ui/dialog-provider/utils";
   import { Card } from "@/components/ui/card";
   import { Button } from "@/components/ui/button";
-  import { toast } from "@/components/ui/sonner";
-  import { DialogID } from "~/components/ui/dialog-provider/utils";
-  import { useDialog } from "~/components/ui/dialog-provider";
-  import { useFormatCurrency } from "~/composables/use-formatters";
-  import type { GroupStatistics } from "~~/lib/api/types/data-contracts";
   import MdiTrendingUp from "~icons/mdi/trending-up";
-  import MdiCardsOutline from "~icons/mdi/cards-outline";
   import MdiRefresh from "~icons/mdi/refresh";
+  import MdiCardsOutline from "~icons/mdi/cards-outline";
 
   const props = defineProps<{
-    stats?: GroupStatistics | null;
+    stats?: GroupStatistics;
   }>();
 
   const emit = defineEmits<{
     (e: "refresh"): void;
   }>();
 
-  const { openDialog } = useDialog();
   const { t } = useI18n();
   const api = useUserApi();
+  const { openDialog } = useDialog();
+
+  const syncing = ref(false);
 
   const fmtCurrency = ref<((v: number | string) => string) | null>(null);
+  onMounted(async () => {
+    fmtCurrency.value = await useFormatCurrency();
+  });
+
   const formatCurrency = (val: number | string) => {
     if (fmtCurrency.value) {
       return fmtCurrency.value(val);
@@ -140,23 +138,26 @@
     return `$${Number(val || 0).toFixed(2)}`;
   };
 
-  const syncing = ref(false);
-
   const hasTrackedItems = computed(() => {
-    return (props.stats?.totalTrackedItems || 0) > 0 || (props.stats?.totalMarketValue || 0) > 0;
+    return (props.stats?.totalTrackedItems ?? 0) > 0;
   });
 
-  const marketValue = computed(() => props.stats?.totalMarketValue || 0);
-  const costBasis = computed(() => props.stats?.totalItemPrice || 0);
-  const trackedCount = computed(() => props.stats?.totalTrackedItems || 0);
+  const trackedCount = computed(() => {
+    return props.stats?.totalTrackedItems ?? 0;
+  });
+
+  const marketValue = computed(() => {
+    return props.stats?.totalTrackedMarketValue ?? 0;
+  });
+
+  const costBasis = computed(() => {
+    return props.stats?.totalTrackedCostBasis ?? 0;
+  });
 
   const gainLoss = computed(() => {
-    const cost = costBasis.value;
-    const market = marketValue.value;
-    if (cost <= 0 && market <= 0) return null;
-
-    const diff = market - cost;
-    const pct = cost > 0 ? (diff / cost) * 100 : 0;
+    if (costBasis.value <= 0 && marketValue.value <= 0) return null;
+    const diff = marketValue.value - costBasis.value;
+    const pct = costBasis.value > 0 ? (diff / costBasis.value) * 100 : 0;
     return {
       diff,
       pct,
@@ -169,24 +170,17 @@
     try {
       const { data, error } = await api.items.pricing.syncAll();
       if (error) {
-        toast.error(t("items.toast.sync_price_failed", "Failed to sync market prices."));
+        toast.error(t("items.toast.failed_sync_all"));
         return;
       }
       toast.success(
-        t(
-          "items.toast.sync_all_success",
-          `Successfully synced market prices for ${data?.updatedCount || 0} tracked items.`
-        )
+        t("items.toast.sync_all_success", {
+          count: data?.updatedCount ?? 0,
+        })
       );
       emit("refresh");
-    } catch {
-      toast.error(t("items.toast.sync_price_failed", "Failed to sync market prices."));
     } finally {
       syncing.value = false;
     }
   }
-
-  onMounted(async () => {
-    fmtCurrency.value = await useFormatCurrency();
-  });
 </script>

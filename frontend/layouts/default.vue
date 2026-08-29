@@ -11,7 +11,7 @@
     <WipeInventoryDialog />
     <TagCreateModal />
     <ItemBarcodeModal />
-    <ItemMtgSearchModal />
+    <PluginSlot name="global:dialogs" />
     <AppQuickMenuModal :actions="quickMenuActions" />
     <AppScannerModal />
     <CollectionCreateModal />
@@ -292,7 +292,7 @@
   import WipeInventoryDialog from "~/components/WipeInventoryDialog.vue";
   import TagCreateModal from "~/components/Tag/CreateModal.vue";
   import ItemBarcodeModal from "~/components/Item/BarcodeModal.vue";
-  import ItemMtgSearchModal from "~/components/Item/MtgSearchModal.vue";
+  import PluginSlot from "~/components/Plugin/Slot.vue";
   import AppQuickMenuModal from "~/components/App/QuickMenuModal.vue";
   import AppScannerModal from "~/components/App/ScannerModal.vue";
   import AppLogo from "~/components/App/Logo.vue";

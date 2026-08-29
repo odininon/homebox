@@ -1,171 +1,119 @@
-package pricing
+package pricing_test
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/sysadminsmedia/homebox/backend/internal/core/services/pricing"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/repo"
+	"github.com/sysadminsmedia/homebox/backend/pkgs/plugins"
+	"github.com/sysadminsmedia/homebox/backend/plugins/mtg"
 )
 
-func TestExtractTCGProductID(t *testing.T) {
-	svc := &PricingService{}
-
-	tests := []struct {
-		input    string
-		expected int
-		valid    bool
-	}{
-		{
-			input:    "https://www.tcgplayer.com/product/541164/magic-modern-horizons-3-modern-horizons-3-play-booster-display",
-			expected: 541164,
-			valid:    true,
-		},
-		{
-			input:    "https://tcgplayer.com/product/12345",
-			expected: 12345,
-			valid:    true,
-		},
-		{
-			input:    "http://shop.tcgplayer.com/magic/product/show?id=98765",
-			expected: 98765,
-			valid:    true,
-		},
-		{
-			input:    "541164",
-			expected: 541164,
-			valid:    true,
-		},
-		{
-			input:    "  541164  ",
-			expected: 541164,
-			valid:    true,
-		},
-		{
-			input:    "https://www.ebay.com/itm/123456",
-			expected: 0,
-			valid:    false,
-		},
-		{
-			input:    "",
-			expected: 0,
-			valid:    false,
-		},
-	}
-
-	for _, tt := range tests {
-		id, ok := svc.ExtractTCGProductID(tt.input)
-		assert.Equal(t, tt.valid, ok, "Input: %s", tt.input)
-		if tt.valid {
-			assert.Equal(t, tt.expected, id, "Input: %s", tt.input)
-		}
-	}
+type mockPricingProvider struct {
+	id          string
+	name        string
+	providerID  string
+	searchCalls int
 }
 
-func TestDetectTCGPlayerLinkFromFields(t *testing.T) {
-	svc := &PricingService{}
+func (m *mockPricingProvider) ID() string          { return m.id }
+func (m *mockPricingProvider) Name() string        { return m.name }
+func (m *mockPricingProvider) Description() string { return "Mock provider" }
+func (m *mockPricingProvider) ProviderID() string  { return m.providerID }
+func (m *mockPricingProvider) Init(ctx context.Context, env *plugins.PluginEnv) error {
+	return nil
+}
+func (m *mockPricingProvider) SearchProducts(ctx context.Context, query string) ([]plugins.ProductSearchResult, error) {
+	m.searchCalls++
+	return []plugins.ProductSearchResult{
+		{ProductID: "999", Name: "Mock Product", MarketPrice: 49.99, Provider: m.providerID},
+	}, nil
+}
+func (m *mockPricingProvider) FetchPrice(ctx context.Context, productID string) (*plugins.PriceSnapshotResult, error) {
+	return &plugins.PriceSnapshotResult{
+		ProductID:   productID,
+		MarketPrice: 50.0,
+		Source:      m.providerID,
+		RecordedAt:  time.Now(),
+	}, nil
+}
+func (m *mockPricingProvider) DetectTrackingFromFields(fields []repo.EntityFieldData) (string, string, bool) {
+	for _, f := range fields {
+		if f.TextValue == "mock-tracking-url" {
+			return "999", f.Name, true
+		}
+	}
+	return "", "", false
+}
+func (m *mockPricingProvider) ExtractProductID(raw string) (string, bool) {
+	if raw == "999" {
+		return "999", true
+	}
+	return "", false
+}
 
+func TestPricingService_DetectTrackingFromFields(t *testing.T) {
+	env := plugins.NewPluginEnv(nil, zerolog.Nop(), nil)
+	reg := plugins.NewRegistry(env)
+
+	mtgPlugin := mtg.NewPlugin()
+	require.NoError(t, reg.Register(mtgPlugin))
+
+	mockProvider := &mockPricingProvider{id: "mock", name: "Mock", providerID: "mock-prov"}
+	require.NoError(t, reg.Register(mockProvider))
+
+	svc := pricing.NewPricingService(nil, reg)
+
+	// Test TCGPlayer detection
 	fields := []repo.EntityFieldData{
-		{
-			Name:      "Condition",
-			TextValue: "Factory Sealed",
-		},
-		{
-			Name:      "TCGPlayer",
-			TextValue: "https://www.tcgplayer.com/product/541164/magic-modern-horizons-3-modern-horizons-3-play-booster-display",
-		},
-		{
-			Name:      "Location Bin",
-			TextValue: "Shelf 4A",
-		},
+		{Name: "Condition", TextValue: "Factory Sealed"},
+		{Name: "TCG Link", TextValue: "https://www.tcgplayer.com/product/541164/magic-modern-horizons-3"},
 	}
 
-	id, fieldName, found := svc.DetectTCGPlayerLinkFromFields(fields)
-	require.True(t, found)
-	assert.Equal(t, 541164, id)
-	assert.Equal(t, "TCGPlayer", fieldName)
+	pid, source, fieldName, ok := svc.DetectTrackingFromFields(fields)
+	require.True(t, ok)
+	assert.Equal(t, "541164", pid)
+	assert.Equal(t, "tcgplayer", source)
+	assert.Equal(t, "TCG Link", fieldName)
 
-	// Test no matching field
-	noMatchFields := []repo.EntityFieldData{
-		{
-			Name:      "Condition",
-			TextValue: "Factory Sealed",
-		},
+	// Test Mock provider detection
+	mockFields := []repo.EntityFieldData{
+		{Name: "Custom Field", TextValue: "mock-tracking-url"},
 	}
-	_, _, found = svc.DetectTCGPlayerLinkFromFields(noMatchFields)
-	assert.False(t, found)
+	pid, source, fieldName, ok = svc.DetectTrackingFromFields(mockFields)
+	require.True(t, ok)
+	assert.Equal(t, "999", pid)
+	assert.Equal(t, "mock-prov", source)
+	assert.Equal(t, "Custom Field", fieldName)
+
+	// Test non-matching
+	noMatch := []repo.EntityFieldData{
+		{Name: "Random", TextValue: "No match"},
+	}
+	pid, source, fieldName, ok = svc.DetectTrackingFromFields(noMatch)
+	assert.False(t, ok)
+	assert.Empty(t, pid)
+	assert.Empty(t, source)
+	assert.Empty(t, fieldName)
 }
 
-func TestTCGCSVClient_GetPrice(t *testing.T) {
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		switch r.URL.Path {
-		case "/groups":
-			_ = json.NewEncoder(w).Encode(tcgResponse[TCGGroup]{
-				Success: true,
-				Results: []TCGGroup{
-					{
-						GroupID:     23444,
-						Name:        "Modern Horizons 3",
-						PublishedOn: "2024-06-14T00:00:00",
-					},
-				},
-			})
-		case "/23444/prices":
-			marketPrice := 294.67
-			lowPrice := 294.45
-			midPrice := 349.99
-			highPrice := 604.19
-			_ = json.NewEncoder(w).Encode(tcgResponse[TCGPrice]{
-				Success: true,
-				Results: []TCGPrice{
-					{
-						ProductID:   541164,
-						MarketPrice: &marketPrice,
-						LowPrice:    &lowPrice,
-						MidPrice:    &midPrice,
-						HighPrice:   &highPrice,
-						SubTypeName: "Normal",
-					},
-				},
-			})
-		case "/23444/products":
-			_ = json.NewEncoder(w).Encode(tcgResponse[TCGProduct]{
-				Success: true,
-				Results: []TCGProduct{
-					{
-						ProductID: 541164,
-						Name:      "Modern Horizons 3 - Play Booster Display",
-						CleanName: "Modern Horizons 3 Play Booster Display",
-						GroupID:   23444,
-						URL:       "https://www.tcgplayer.com/product/541164",
-					},
-				},
-			})
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer mockServer.Close()
+func TestPricingService_SearchProducts(t *testing.T) {
+	env := plugins.NewPluginEnv(nil, zerolog.Nop(), nil)
+	reg := plugins.NewRegistry(env)
 
-	client := NewTCGCSVClient()
-	client.baseURL = mockServer.URL
+	mockProvider := &mockPricingProvider{id: "mock", name: "Mock", providerID: "mock-prov"}
+	require.NoError(t, reg.Register(mockProvider))
 
-	ctx := context.Background()
-	res, err := client.GetPrice(ctx, 541164)
+	svc := pricing.NewPricingService(nil, reg)
+
+	results, err := svc.SearchProducts(context.Background(), "test")
 	require.NoError(t, err)
-	require.NotNil(t, res)
-
-	assert.Equal(t, 541164, res.ProductID)
-	assert.InDelta(t, 294.67, res.MarketPrice, 0.001)
-	assert.InDelta(t, 294.45, res.LowPrice, 0.001)
-	assert.InDelta(t, 349.99, res.MidPrice, 0.001)
-	assert.InDelta(t, 604.19, res.HighPrice, 0.001)
-	assert.Equal(t, "Modern Horizons 3 - Play Booster Display", res.ProductName)
-	assert.Equal(t, "Modern Horizons 3", res.GroupName)
-	assert.Equal(t, "tcgplayer", res.Source)
+	require.Len(t, results, 1)
+	assert.Equal(t, "999", results[0].ProductID)
+	assert.Equal(t, "Mock Product", results[0].Name)
 }

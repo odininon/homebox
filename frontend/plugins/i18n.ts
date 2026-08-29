@@ -3,6 +3,8 @@ import type { CompileError, MessageContext } from "vue-i18n";
 import { createI18n } from "vue-i18n";
 import { IntlMessageFormat } from "intl-messageformat";
 
+import { pluginRegistry, deepMerge } from "../lib/plugins/registry";
+
 export default defineNuxtPlugin(({ vueApp }) => {
   function checkDefaultLanguage() {
     let matched = null;
@@ -32,6 +34,14 @@ export default defineNuxtPlugin(({ vueApp }) => {
   });
   vueApp.use(i18n);
 
+  pluginRegistry.onPluginRegistered(plugin => {
+    if (plugin.messages) {
+      for (const [locale, msgs] of Object.entries(plugin.messages)) {
+        i18n.global.mergeLocaleMessage(locale, msgs);
+      }
+    }
+  });
+
   watch(
     () => preferences.value.language,
     language => {
@@ -52,11 +62,41 @@ export default defineNuxtPlugin(({ vueApp }) => {
 
 export const messages = () => {
   const messages: Record<string, any> = {};
-  const modules = import.meta.glob("~//locales/**.json", { eager: true });
-  for (const path in modules) {
-    const key = path.slice(9, -5);
-    messages[key] = modules[path];
+
+  // 1. Core locales
+  const coreModules = import.meta.glob("../locales/*.json", { eager: true });
+  for (const path in coreModules) {
+    const fileName = path.split("/").pop() || "";
+    const key = fileName.replace(/\.json$/, "");
+    if (key) {
+      const content = (coreModules[path] as any)?.default ?? coreModules[path];
+      messages[key] = { ...content };
+    }
   }
+
+  // 2. Plugin locales from file system glob
+  const pluginModules = import.meta.glob("../plugins-modules/**/locales/*.json", { eager: true });
+  for (const path in pluginModules) {
+    const fileName = path.split("/").pop() || "";
+    const locale = fileName.replace(/\.json$/, "");
+    if (locale) {
+      if (!messages[locale]) {
+        messages[locale] = {};
+      }
+      const content = (pluginModules[path] as any)?.default ?? pluginModules[path];
+      deepMerge(messages[locale], content);
+    }
+  }
+
+  // 3. Plugin messages from PluginRegistry
+  const registryMessages = pluginRegistry.getAllMessages();
+  for (const [locale, msgs] of Object.entries(registryMessages)) {
+    if (!messages[locale]) {
+      messages[locale] = {};
+    }
+    deepMerge(messages[locale], msgs);
+  }
+
   return messages;
 };
 
