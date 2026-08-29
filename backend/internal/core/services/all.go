@@ -9,6 +9,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/repo"
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/config"
 	"github.com/sysadminsmedia/homebox/backend/pkgs/mailer"
+	"github.com/sysadminsmedia/homebox/backend/pkgs/plugins"
 )
 
 type AllServices struct {
@@ -19,6 +20,7 @@ type AllServices struct {
 	Exports           *ExportService
 	Currencies        *currencies.CurrencyRegistry
 	Pricing           *pricing.PricingService
+	Plugins           *plugins.Registry
 }
 
 type OptionsFunc func(*options)
@@ -33,6 +35,13 @@ type options struct {
 	pubSubConn           string
 	dialect              string
 	mailer               *mailer.Mailer
+	plugins              *plugins.Registry
+}
+
+func WithPlugins(r *plugins.Registry) func(*options) {
+	return func(o *options) {
+		o.plugins = r
+	}
 }
 
 func WithAutoIncrementAssetID(v bool) func(*options) {
@@ -129,6 +138,7 @@ func New(repos *repo.AllRepos, opts ...OptionsFunc) *AllServices {
 			dialect:    options.dialect,
 		},
 		Currencies: currencies.NewCurrencyService(options.currencies),
-		Pricing:    pricing.NewPricingService(repos),
+		Pricing:    pricing.NewPricingService(repos, options.plugins),
+		Plugins:    options.plugins,
 	}
 }

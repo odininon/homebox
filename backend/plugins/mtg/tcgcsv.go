@@ -1,4 +1,4 @@
-package pricing
+package mtg
 
 import (
 	"context"
@@ -7,9 +7,12 @@ import (
 	"io"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/sysadminsmedia/homebox/backend/pkgs/plugins"
 )
 
 const (
@@ -269,7 +272,12 @@ func valOrZero(p *float64) float64 {
 	return *p
 }
 
-func (c *TCGCSVClient) GetPrice(ctx context.Context, productID int) (*PriceResult, error) {
+func (c *TCGCSVClient) GetPrice(ctx context.Context, productIDStr string) (*plugins.PriceSnapshotResult, error) {
+	productID, err := strconv.Atoi(productIDStr)
+	if err != nil || productID <= 0 {
+		return nil, fmt.Errorf("invalid numeric product ID: %q", productIDStr)
+	}
+
 	groupID, err := c.FindProductGroup(ctx, productID)
 	if err != nil {
 		return nil, err
@@ -322,8 +330,16 @@ func (c *TCGCSVClient) GetPrice(ctx context.Context, productID int) (*PriceResul
 		}
 	}
 
-	return &PriceResult{
-		ProductID:      productID,
+	notes := ""
+	if productName != "" {
+		notes = productName
+		if groupName != "" {
+			notes = fmt.Sprintf("%s (%s)", productName, groupName)
+		}
+	}
+
+	return &plugins.PriceSnapshotResult{
+		ProductID:      productIDStr,
 		ProductName:    productName,
 		GroupName:      groupName,
 		MarketPrice:    marketPrice,
@@ -334,6 +350,7 @@ func (c *TCGCSVClient) GetPrice(ctx context.Context, productID int) (*PriceResul
 		ImageURL:       imageURL,
 		Source:         "tcgplayer",
 		RecordedAt:     time.Now(),
+		Notes:          notes,
 	}, nil
 }
 
@@ -352,7 +369,7 @@ func isSealedProductName(name string) bool {
 	return false
 }
 
-func (c *TCGCSVClient) SearchProducts(ctx context.Context, query string) ([]ProductSearchResult, error) {
+func (c *TCGCSVClient) SearchProducts(ctx context.Context, query string) ([]plugins.ProductSearchResult, error) {
 	query = strings.ToLower(strings.TrimSpace(query))
 	if query == "" {
 		return nil, nil
@@ -400,7 +417,7 @@ func (c *TCGCSVClient) SearchProducts(ctx context.Context, query string) ([]Prod
 	}
 
 	type groupResult struct {
-		items []ProductSearchResult
+		items []plugins.ProductSearchResult
 	}
 
 	resChan := make(chan groupResult, len(scoredGroups))
@@ -429,7 +446,7 @@ func (c *TCGCSVClient) SearchProducts(ctx context.Context, query string) ([]Prod
 				priceMap[pr.ProductID] = valOrZero(pr.MarketPrice)
 			}
 
-			var matches []ProductSearchResult
+			var matches []plugins.ProductSearchResult
 			for _, prod := range products {
 				pName := strings.ToLower(prod.Name)
 				pClean := strings.ToLower(prod.CleanName)
@@ -443,8 +460,8 @@ func (c *TCGCSVClient) SearchProducts(ctx context.Context, query string) ([]Prod
 				}
 
 				if allMatch || strings.Contains(pName, query) || strings.Contains(pClean, query) {
-					matches = append(matches, ProductSearchResult{
-						ProductID:   prod.ProductID,
+					matches = append(matches, plugins.ProductSearchResult{
+						ProductID:   strconv.Itoa(prod.ProductID),
 						Name:        prod.Name,
 						CleanName:   prod.CleanName,
 						GroupName:   grp.Name,
@@ -452,6 +469,7 @@ func (c *TCGCSVClient) SearchProducts(ctx context.Context, query string) ([]Prod
 						MarketPrice: priceMap[prod.ProductID],
 						ImageURL:    prod.ImageURL,
 						URL:         prod.URL,
+						Provider:    "tcgplayer",
 					})
 				}
 			}
@@ -465,7 +483,7 @@ func (c *TCGCSVClient) SearchProducts(ctx context.Context, query string) ([]Prod
 	wg.Wait()
 	close(resChan)
 
-	var allResults []ProductSearchResult
+	var allResults []plugins.ProductSearchResult
 	for gr := range resChan {
 		allResults = append(allResults, gr.items...)
 	}

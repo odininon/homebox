@@ -45,7 +45,7 @@
   import DetailsSection from "~/components/global/DetailsSection/DetailsSection.vue";
   import ItemAttachmentsList from "~/components/Item/AttachmentsList.vue";
   import ItemViewSelectable from "~/components/Item/View/Selectable.vue";
-  import ItemValuationCard from "~/components/Item/ValuationCard.vue";
+  import PluginSlot from "~/components/Plugin/Slot.vue";
 
   const { t } = useI18n();
 
@@ -850,7 +850,7 @@
             </div>
           </BaseCard>
 
-          <ItemValuationCard :item="item" @refresh="refresh" />
+          <PluginSlot name="item:details:valuation" :context="{ item, onRefresh: refresh }" />
 
           <BaseCard v-if="showPurchase" collapsable>
             <template #title> {{ $t("items.purchase_details") }} </template>

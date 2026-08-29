@@ -31,30 +31,7 @@ func registerRecurringTasks(app *app, cfg *config.Config, runner *graceful.Runne
 		return nil
 	})
 
-	runner.AddPlugin(NewTask("purge-tokens", 24*time.Hour, func(ctx context.Context) {
-		_, err := app.repos.AuthTokens.PurgeExpiredTokens(ctx)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to purge expired tokens")
-		}
-	}))
-
-	runner.AddPlugin(NewTask("purge-password-reset-tokens", 24*time.Hour, func(ctx context.Context) {
-		_, err := app.repos.PasswordResetTokens.PurgeExpired(ctx)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to purge expired password reset tokens")
-		}
-	}))
-
-	runner.AddPlugin(NewTask("purge-invitations", 24*time.Hour, func(ctx context.Context) {
-		_, err := app.repos.Groups.InvitationPurge(ctx)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to purge expired invitations")
-		}
-	}))
-
-	runner.AddPlugin(NewTask("purge-stale-exports", 24*time.Hour, func(ctx context.Context) {
-		purgeStaleExports(ctx, app)
-	}))
+	registerPurgeTasks(app, runner)
 
 	runner.AddPlugin(NewTask("sync-tracked-prices", 24*time.Hour, func(ctx context.Context) {
 		log.Info().Msg("starting daily sync of tracked item prices")
@@ -65,6 +42,8 @@ func registerRecurringTasks(app *app, cfg *config.Config, runner *graceful.Runne
 		}
 		log.Info().Int("updated_count", count).Msg("completed daily sync of tracked item prices")
 	}))
+
+	registerPluginTasks(app, runner)
 
 	runner.AddPlugin(NewTask("send-notifications", time.Hour, func(ctx context.Context) {
 		now := time.Now()
@@ -114,68 +93,7 @@ func registerRecurringTasks(app *app, cfg *config.Config, runner *graceful.Runne
 		})
 	})
 
-	if cfg.Thumbnail.Enabled {
-		runner.AddFunc("create-thumbnails-subscription", func(ctx context.Context) error {
-			pubsubString, err := utils.GenerateSubPubConn(cfg.Database.PubSubConnString, "thumbnails")
-			if err != nil {
-				log.Error().Err(err).Msg("failed to generate pubsub connection string")
-				return err
-			}
-			topic, err := pubsub.OpenTopic(ctx, pubsubString)
-			if err != nil {
-				return err
-			}
-			defer func(topic *pubsub.Topic, ctx context.Context) {
-				err := topic.Shutdown(ctx)
-				if err != nil {
-					log.Err(err).Msg("fail to shutdown pubsub topic")
-				}
-			}(topic, ctx)
-
-			subscription, err := pubsub.OpenSubscription(ctx, pubsubString)
-			if err != nil {
-				log.Err(err).Msg("failed to open pubsub topic")
-				return err
-			}
-			defer func(topic *pubsub.Subscription, ctx context.Context) {
-				err := topic.Shutdown(ctx)
-				if err != nil {
-					log.Err(err).Msg("fail to shutdown pubsub topic")
-				}
-			}(subscription, ctx)
-
-			for {
-				select {
-				case <-ctx.Done():
-					return ctx.Err()
-				default:
-					msg, err := subscription.Receive(ctx)
-					log.Debug().Msg("received thumbnail generation request from pubsub topic")
-					if err != nil {
-						log.Err(err).Msg("failed to receive message from pubsub topic")
-						continue
-					}
-					if msg == nil {
-						log.Warn().Msg("received nil message from pubsub topic")
-						continue
-					}
-					groupId, err := uuid.Parse(msg.Metadata["group_id"])
-					if err != nil {
-						log.Error().Err(err).Str("group_id", msg.Metadata["group_id"]).Msg("failed to parse group ID from message metadata")
-					}
-					attachmentId, err := uuid.Parse(msg.Metadata["attachment_id"])
-					if err != nil {
-						log.Error().Err(err).Str("attachment_id", msg.Metadata["attachment_id"]).Msg("failed to parse attachment ID from message metadata")
-					}
-					err = app.repos.Attachments.CreateThumbnail(ctx, groupId, attachmentId, msg.Metadata["title"], msg.Metadata["path"])
-					if err != nil {
-						log.Err(err).Msg("failed to create thumbnail")
-					}
-					msg.Ack()
-				}
-			}
-		})
-	}
+	registerThumbnailSubscription(app, cfg, runner)
 
 	if cfg.Options.GithubReleaseCheck {
 		runner.AddPlugin(NewTask("get-latest-github-release", time.Hour, func(ctx context.Context) {
@@ -311,4 +229,107 @@ func purgeStaleExports(ctx context.Context, app *app) {
 		Int("purged", purged).
 		Int("candidates", len(candidates)).
 		Msg("purged stale collection exports")
+}
+
+func registerPurgeTasks(app *app, runner *graceful.Runner) {
+	runner.AddPlugin(NewTask("purge-tokens", 24*time.Hour, func(ctx context.Context) {
+		_, err := app.repos.AuthTokens.PurgeExpiredTokens(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to purge expired tokens")
+		}
+	}))
+
+	runner.AddPlugin(NewTask("purge-password-reset-tokens", 24*time.Hour, func(ctx context.Context) {
+		_, err := app.repos.PasswordResetTokens.PurgeExpired(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to purge expired password reset tokens")
+		}
+	}))
+
+	runner.AddPlugin(NewTask("purge-invitations", 24*time.Hour, func(ctx context.Context) {
+		_, err := app.repos.Groups.InvitationPurge(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to purge expired invitations")
+		}
+	}))
+
+	runner.AddPlugin(NewTask("purge-stale-exports", 24*time.Hour, func(ctx context.Context) {
+		purgeStaleExports(ctx, app)
+	}))
+}
+
+func registerPluginTasks(app *app, runner *graceful.Runner) {
+	if app.plugins == nil {
+		return
+	}
+	for _, job := range app.plugins.GetScheduledJobs() {
+		j := job
+		runner.AddPlugin(NewTask(j.Name, j.Interval, j.Run))
+	}
+}
+
+func registerThumbnailSubscription(app *app, cfg *config.Config, runner *graceful.Runner) {
+	if !cfg.Thumbnail.Enabled {
+		return
+	}
+	runner.AddFunc("create-thumbnails-subscription", func(ctx context.Context) error {
+		pubsubString, err := utils.GenerateSubPubConn(cfg.Database.PubSubConnString, "thumbnails")
+		if err != nil {
+			log.Error().Err(err).Msg("failed to generate pubsub connection string")
+			return err
+		}
+		topic, err := pubsub.OpenTopic(ctx, pubsubString)
+		if err != nil {
+			return err
+		}
+		defer func(topic *pubsub.Topic, ctx context.Context) {
+			err := topic.Shutdown(ctx)
+			if err != nil {
+				log.Err(err).Msg("fail to shutdown pubsub topic")
+			}
+		}(topic, ctx)
+
+		subscription, err := pubsub.OpenSubscription(ctx, pubsubString)
+		if err != nil {
+			log.Err(err).Msg("failed to open pubsub topic")
+			return err
+		}
+		defer func(topic *pubsub.Subscription, ctx context.Context) {
+			err := topic.Shutdown(ctx)
+			if err != nil {
+				log.Err(err).Msg("fail to shutdown pubsub topic")
+			}
+		}(subscription, ctx)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				msg, err := subscription.Receive(ctx)
+				log.Debug().Msg("received thumbnail generation request from pubsub topic")
+				if err != nil {
+					log.Err(err).Msg("failed to receive message from pubsub topic")
+					continue
+				}
+				if msg == nil {
+					log.Warn().Msg("received nil message from pubsub topic")
+					continue
+				}
+				groupId, err := uuid.Parse(msg.Metadata["group_id"])
+				if err != nil {
+					log.Error().Err(err).Str("group_id", msg.Metadata["group_id"]).Msg("failed to parse group ID from message metadata")
+				}
+				attachmentId, err := uuid.Parse(msg.Metadata["attachment_id"])
+				if err != nil {
+					log.Error().Err(err).Str("attachment_id", msg.Metadata["attachment_id"]).Msg("failed to parse attachment ID from message metadata")
+				}
+				err = app.repos.Attachments.CreateThumbnail(ctx, groupId, attachmentId, msg.Metadata["title"], msg.Metadata["path"])
+				if err != nil {
+					log.Err(err).Msg("failed to create thumbnail")
+				}
+				msg.Ack()
+			}
+		}
+	})
 }

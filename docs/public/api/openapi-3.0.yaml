@@ -1529,6 +1529,22 @@ paths:
       responses:
         "204":
           description: No Content
+  /v1/plugins:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Plugins
+      summary: List installed plugins and their capabilities
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/plugins.PluginInfo"
   /v1/products/image-proxy:
     get:
       security:
@@ -1574,12 +1590,17 @@ paths:
         - Bearer: []
       tags:
         - Item Pricing
-      summary: Search Products in TCG Catalog
+      summary: Search Products in Pricing Catalogs
       parameters:
         - description: Search query
           name: q
           in: query
           required: true
+          schema:
+            type: string
+        - description: Provider ID (e.g. tcgplayer)
+          name: provider
+          in: query
           schema:
             type: string
       responses:
@@ -3347,6 +3368,19 @@ components:
         - StatusRunning
         - StatusCompleted
         - StatusFailed
+    plugins.PluginInfo:
+      type: object
+      properties:
+        capabilities:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
     pricing.ProductSearchResult:
       type: object
       properties:
@@ -3363,7 +3397,9 @@ components:
         name:
           type: string
         productId:
-          type: integer
+          type: string
+        provider:
+          type: string
         url:
           type: string
     repo.APIKeyCreate:

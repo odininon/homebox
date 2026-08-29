@@ -12,7 +12,7 @@
   import LocationCard from "~/components/Location/Card.vue";
   import TagChip from "~/components/Tag/Chip.vue";
   import Table from "~/components/Item/View/Table.vue";
-  import PortfolioValuationCard from "~/components/Home/PortfolioValuationCard.vue";
+  import PluginSlot from "~/components/Plugin/Slot.vue";
 
   const { t } = useI18n();
 
@@ -44,7 +44,7 @@
 <template>
   <div>
     <BaseContainer class="flex flex-col gap-4">
-      <PortfolioValuationCard :stats="statistics" @refresh="handlePortfolioRefresh" />
+      <PluginSlot name="dashboard:top" :context="{ stats: statistics, onRefresh: handlePortfolioRefresh }" />
 
       <section>
         <Subtitle> {{ $t("home.quick_statistics") }} </Subtitle>

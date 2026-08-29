@@ -24,6 +24,8 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/validate"
 	"github.com/sysadminsmedia/homebox/backend/internal/web/mid"
 	"github.com/sysadminsmedia/homebox/backend/pkgs/hasher"
+	"github.com/sysadminsmedia/homebox/backend/pkgs/plugins"
+	"github.com/sysadminsmedia/homebox/backend/plugins/mtg"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -183,6 +185,14 @@ func run(cfg *config.Config) error {
 		}
 	}
 
+	logger := log.With().Caller().Logger()
+
+	pluginEnv := plugins.NewPluginEnv(app.repos, logger, cfg)
+	app.plugins = plugins.NewRegistry(pluginEnv)
+	if err := app.plugins.Register(mtg.NewPlugin()); err != nil {
+		log.Error().Err(err).Msg("failed to register MTG plugin")
+	}
+
 	app.services = services.New(
 		app.repos,
 		services.WithAutoIncrementAssetID(cfg.Options.AutoIncrementAssetID),
@@ -190,14 +200,13 @@ func run(cfg *config.Config) error {
 		services.WithNotifierConfig(&cfg.Notifier),
 		services.WithExportPlumbing(app.bus, app.db, cfg.Storage, cfg.Database.PubSubConnString, sqlDialect),
 		services.WithMailer(&app.mailer),
+		services.WithPlugins(app.plugins),
 	)
 
 	ensureAssetIDs(app)
 
 	// =========================================================================
 	// Start Server
-
-	logger := log.With().Caller().Logger()
 
 	router := chi.NewMux()
 

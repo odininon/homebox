@@ -8,10 +8,10 @@
   import MdiLoading from "~icons/mdi/loading";
   import MdiDelete from "~icons/mdi/delete";
   import MdiPencil from "~icons/mdi/pencil";
-  import MdiCardsOutline from "~icons/mdi/cards-outline";
   import MdiContentSaveOutline from "~icons/mdi/content-save-outline";
   import MdiImageOutline from "~icons/mdi/image-outline";
   import MdiOpenInNew from "~icons/mdi/open-in-new";
+  import PluginSlot from "~/components/Plugin/Slot.vue";
   import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
   import { Button } from "@/components/ui/button";
   import { useDialog } from "@/components/ui/dialog-provider";
@@ -515,31 +515,6 @@
     } as unknown as EntityFieldData);
   }
 
-  function detectAndFillTCGLink() {
-    if (!item.value?.fields) return;
-    for (const f of item.value.fields) {
-      if (f.textValue) {
-        const match = f.textValue.match(/tcgplayer\.com\/(?:product\/|magic\/product\/show\?id=)(\d+)/i);
-        if (match && match[1]) {
-          item.value.priceTrackingEnabled = true;
-          item.value.priceTrackingSource = "tcgplayer";
-          item.value.priceTrackingId = match[1];
-          toast.success(`Found TCGPlayer product ID ${match[1]} in custom field "${f.name}"`);
-          return;
-        }
-      }
-    }
-    toast.info("No TCGPlayer product URL found in custom fields.");
-  }
-
-  function openMtgSearchModal() {
-    openDialog(DialogID.MtgSearch, {
-      params: {
-        query: item.value?.name || "",
-      },
-    });
-  }
-
   const { query, results, isLoading, triggerSearch } = useItemSearch(api, { immediate: false });
   const parent = ref();
   // Derived location shown in the "Location" selector. Kept separate from
@@ -971,60 +946,7 @@
           </div>
         </Card>
 
-        <Card v-if="preferences.editorAdvancedView" class="overflow-visible shadow-xl">
-          <div class="flex items-center justify-between px-4 py-5 sm:px-6">
-            <h3 class="text-lg font-medium leading-6">
-              {{ $t("items.price_tracking", "Price Tracking & Market Valuation") }}
-            </h3>
-            <div class="flex items-center gap-2">
-              <Button size="sm" variant="outline" type="button" class="h-7 gap-1 text-xs" @click="openMtgSearchModal">
-                <MdiCardsOutline class="size-3.5 text-primary" />
-                <span>{{ $t("items.search_mtg_catalog", "Search MTG Catalog") }}</span>
-              </Button>
-              <Button size="sm" variant="outline" type="button" class="h-7 gap-1 text-xs" @click="detectAndFillTCGLink">
-                <span>{{ $t("items.detect_from_fields", "Auto-Detect from Fields") }}</span>
-              </Button>
-            </div>
-          </div>
-          <div class="border-t sm:p-0">
-            <div class="grid grid-cols-1 sm:divide-y">
-              <div class="border-b px-4 pb-4 pt-2 sm:px-6">
-                <FormCheckbox
-                  v-model="item.priceTrackingEnabled"
-                  :label="$t('items.enable_price_tracking', 'Enable Automated Price Tracking')"
-                  inline
-                />
-              </div>
-
-              <div v-if="item.priceTrackingEnabled" class="border-b px-4 pb-4 pt-2 sm:px-6">
-                <FormTextField
-                  v-model="item.priceTrackingSource"
-                  :label="$t('items.price_tracking_source', 'Price Source (e.g. tcgplayer)')"
-                  inline
-                />
-              </div>
-
-              <div v-if="item.priceTrackingEnabled" class="border-b px-4 pb-4 pt-2 sm:px-6">
-                <FormTextField
-                  v-model="item.priceTrackingId"
-                  :label="$t('items.price_tracking_id', 'TCGPlayer Product ID or URL')"
-                  placeholder="e.g. 541164 or https://www.tcgplayer.com/product/541164/..."
-                  inline
-                />
-              </div>
-
-              <div v-if="item.priceTrackingEnabled" class="border-b px-4 pb-4 pt-2 sm:px-6">
-                <FormTextField
-                  v-model.number="item.currentMarketPrice"
-                  type="number"
-                  step="any"
-                  :label="$t('items.current_market_price', 'Current Market Price ($)')"
-                  inline
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
+        <PluginSlot v-if="preferences.editorAdvancedView" name="item:edit:pricing" :context="{ item }" />
 
         <Card v-if="preferences.editorAdvancedView" class="overflow-visible shadow-xl">
           <div class="px-4 py-5 sm:px-6">

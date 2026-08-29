@@ -10,6 +10,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/config"
 	"github.com/sysadminsmedia/homebox/backend/internal/sys/otel"
 	"github.com/sysadminsmedia/homebox/backend/pkgs/mailer"
+	"github.com/sysadminsmedia/homebox/backend/pkgs/plugins"
 )
 
 type app struct {
@@ -18,6 +19,7 @@ type app struct {
 	db                  *ent.Client
 	repos               *repo.AllRepos
 	services            *services.AllServices
+	plugins             *plugins.Registry
 	bus                 *eventbus.EventBus
 	authLimiter         *authRateLimiter
 	notifierTestLimiter *simpleRateLimiter

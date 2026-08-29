@@ -744,6 +744,13 @@ export interface EntUserGroupEdges {
   user: EntUser;
 }
 
+export interface PluginsPluginInfo {
+  capabilities: string[];
+  description: string;
+  id: string;
+  name: string;
+}
+
 export interface ProductSearchResult {
   cleanName: string;
   groupId: number;
@@ -751,7 +758,8 @@ export interface ProductSearchResult {
   imageUrl: string;
   marketPrice: number;
   name: string;
-  productId: number;
+  productId: string;
+  provider: string;
   url: string;
 }
 
