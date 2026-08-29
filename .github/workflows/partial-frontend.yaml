@@ -36,22 +36,8 @@ jobs:
         working-directory: frontend
 
   integration-tests:
-    name: Integration Tests
+    name: Integration Tests (SQLite)
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: homebox
-          POSTGRES_PASSWORD: homebox
-          POSTGRES_DB: homebox
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
@@ -83,15 +69,13 @@ jobs:
 
       - name: Run Integration Tests
         run: task test:ci
+
   integration-tests-pgsql:
-    strategy:
-        matrix:
-            database_version: [17,16,15]
-    name: Integration Tests PGSQL ${{ matrix.database_version }}
+    name: Integration Tests (PGSQL)
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:${{ matrix.database_version }}
+        image: postgres:17
         env:
           POSTGRES_USER: homebox
           POSTGRES_PASSWORD: homebox
