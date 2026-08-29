@@ -40,8 +40,17 @@ function importFileGenerator(entries: number): ImportObj[] {
 
   const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
-  const tags = faker.word.words(5).split(" ").join(";");
-  const locations = faker.word.words(3).split(" ");
+  const uniqueTags = Array.from(new Set(Array.from({ length: 10 }, () => faker.word.sample()))).slice(0, 5);
+  while (uniqueTags.length < 5) {
+    uniqueTags.push(`tag_${uniqueTags.length}_${faker.string.alphanumeric(4)}`);
+  }
+  const tags = uniqueTags.join(";");
+
+  const uniqueLocations = Array.from(new Set(Array.from({ length: 10 }, () => faker.word.sample()))).slice(0, 3);
+  while (uniqueLocations.length < 3) {
+    uniqueLocations.push(`loc_${uniqueLocations.length}_${faker.string.alphanumeric(4)}`);
+  }
+  const locations = uniqueLocations;
 
   const half = Math.floor(entries / 2);
 
@@ -103,7 +112,7 @@ describe("group related statistics tests", () => {
     expect(setupResp.status).toBe(204);
 
     for (const item of imports) {
-      const tags = item[`HB.tags`].split(";");
+      const tags = Array.from(new Set(item[`HB.tags`].split(";")));
       for (const tag of tags) {
         if (tagData[tag]) {
           tagData[tag] += item[`HB.purchase_price`];
