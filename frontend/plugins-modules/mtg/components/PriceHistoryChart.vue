@@ -248,7 +248,7 @@
         </defs>
 
         <!-- Horizontal Grid Lines & Y-Labels -->
-        <g class="grid-lines">
+        <g>
           <template v-for="tick in yTicks" :key="tick.y">
             <line
               :x1="padding.left"
@@ -267,7 +267,7 @@
         </g>
 
         <!-- X-Axis Labels -->
-        <g class="x-labels">
+        <g>
           <text
             v-for="(tick, idx) in xTicks"
             :key="idx"
@@ -314,7 +314,7 @@
         />
 
         <!-- Data Points (Hoverable) -->
-        <g class="data-points">
+        <g>
           <circle
             v-for="(pt, idx) in points"
             :key="idx"

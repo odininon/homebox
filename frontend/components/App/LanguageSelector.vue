@@ -9,10 +9,24 @@
   const preferences = useViewPreferences();
 
   const locales = Object.values(Locales).map(l => {
+    const langTag = (preferences.value.language ?? "en-US").replace(/@.*/, "") || "en-US";
+    const localTag = l.code.replace(/@.*/, "");
+    let name = l.code;
+    let localName = l.code;
+    try {
+      name = new Intl.DisplayNames([langTag], { type: "language" }).of(localTag) ?? l.code;
+    } catch {
+      // ignore
+    }
+    try {
+      localName = new Intl.DisplayNames([localTag], { type: "language" }).of(localTag) ?? l.code;
+    } catch {
+      // ignore
+    }
     return {
       code: l.code,
-      name: new Intl.DisplayNames([preferences.value.language ?? "en-US"], { type: "language" }).of(l.code) ?? l.code,
-      localName: new Intl.DisplayNames([l.code], { type: "language" }).of(l.code) ?? l.code,
+      name,
+      localName,
     };
   });
 

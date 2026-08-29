@@ -92,4 +92,20 @@ describe("Plugin i18n and MTG translations", () => {
     expect(en?.global?.notes).toBe("Notes");
     expect(en?.global?.actions).toBe("Actions");
   });
+
+  test("messageCompiler safely handles non-standard locale tags like en@pirate", async () => {
+    const { messageCompiler } = await import("../../i18n/compiler");
+
+    const compiler = messageCompiler("Hello {name}!", {
+      locale: "en@pirate",
+      key: "greeting",
+      onError: () => {},
+    });
+
+    const result = (compiler as (ctx: { values: Record<string, any> }) => string)({
+      values: { name: "Ahoy" },
+    });
+
+    expect(result).toBe("Hello Ahoy!");
+  });
 });
