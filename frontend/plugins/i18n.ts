@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { CompileError, MessageContext } from "vue-i18n";
 import { createI18n } from "vue-i18n";
-import { IntlMessageFormat } from "intl-messageformat";
-
+import { messageCompiler } from "../lib/i18n/compiler";
 import { pluginRegistry, deepMerge } from "../lib/plugins/registry";
 
 export default defineNuxtPlugin(({ vueApp }) => {
@@ -100,35 +98,4 @@ export const messages = () => {
   return messages;
 };
 
-export const messageCompiler: (
-  message: string | any,
-  {
-    locale,
-    key,
-    onError,
-  }: {
-    locale: any;
-    key: any;
-    onError: any;
-  }
-) => (ctx: MessageContext) => unknown = (message, { locale, key, onError }) => {
-  if (typeof message === "string") {
-    /**
-     * You can tune your message compiler performance more with your cache strategy or also memoization at here
-     */
-    const formatter = new IntlMessageFormat(message, locale);
-    return (ctx: MessageContext) => {
-      return formatter.format(ctx.values);
-    };
-  } else {
-    /**
-     * for AST.
-     * If you would like to support it,
-     * You need to transform locale messages such as `json`, `yaml`, etc. with the bundle plugin.
-     */
-    if (onError) {
-      onError(new Error("not support for AST") as CompileError);
-    }
-    return () => key;
-  }
-};
+export { messageCompiler };
