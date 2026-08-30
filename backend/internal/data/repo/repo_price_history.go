@@ -8,6 +8,7 @@ import (
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entity"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitypricehistory"
+	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/entitytype"
 	"github.com/sysadminsmedia/homebox/backend/internal/data/ent/group"
 )
 
@@ -162,6 +163,9 @@ func (r *PriceHistoryRepository) RecordSnapshot(ctx context.Context, entityID uu
 	}
 
 	_ = r.db.Entity.UpdateOneID(entityID).
+		SetPriceTrackingEnabled(true).
+		SetPriceTrackingSource(source).
+		SetPriceTrackingID(sourceID).
 		SetCurrentMarketPrice(price).
 		SetLastPriceSyncAt(recordedAt).
 		Exec(ctx)
@@ -196,6 +200,17 @@ func (r *PriceHistoryRepository) GetTrackedEntitiesByIDs(ctx context.Context, gi
 			entity.IDIn(ids...),
 			entity.ArchivedEQ(false),
 			entity.HasGroupWith(group.IDEQ(gid)),
+		).
+		WithFields().
+		All(ctx)
+}
+
+func (r *PriceHistoryRepository) GetAllItemEntitiesByGroup(ctx context.Context, gid uuid.UUID) ([]*ent.Entity, error) {
+	return r.db.Entity.Query().
+		Where(
+			entity.ArchivedEQ(false),
+			entity.HasGroupWith(group.IDEQ(gid)),
+			entity.HasEntityTypeWith(entitytype.IsLocation(false)),
 		).
 		WithFields().
 		All(ctx)

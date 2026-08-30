@@ -67,7 +67,9 @@
       "failed_delete_price": "Failed to delete price snapshot",
       "price_deleted": "Price snapshot deleted",
       "failed_sync_all": "Failed to sync portfolio prices",
-      "sync_all_success": "Successfully synced prices for {count, plural, one {# item} other {# items}}"
+      "sync_all_success": "Successfully synced prices for {count, plural, one {# item} other {# items}}",
+      "sync_price_failed": "Failed to sync market prices",
+      "sync_bulk_success": "Successfully synced market prices for {count, plural, one {# item} other {# items}}"
     }
   },
   "home": {
