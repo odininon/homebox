@@ -139,7 +139,7 @@
   };
 
   const hasTrackedItems = computed(() => {
-    return (props.stats?.totalTrackedItems ?? 0) > 0;
+    return (props.stats?.totalTrackedItems ?? 0) > 0 || (props.stats?.totalMarketValue ?? 0) > 0;
   });
 
   const trackedCount = computed(() => {
@@ -147,11 +147,15 @@
   });
 
   const marketValue = computed(() => {
-    return props.stats?.totalTrackedMarketValue ?? 0;
+    return (props.stats?.totalTrackedMarketValue ?? 0) > 0
+      ? (props.stats?.totalTrackedMarketValue ?? 0)
+      : (props.stats?.totalMarketValue ?? 0);
   });
 
   const costBasis = computed(() => {
-    return props.stats?.totalTrackedCostBasis ?? 0;
+    return (props.stats?.totalTrackedCostBasis ?? 0) > 0
+      ? (props.stats?.totalTrackedCostBasis ?? 0)
+      : (props.stats?.totalItemPrice ?? 0);
   });
 
   const gainLoss = computed(() => {

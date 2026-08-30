@@ -678,8 +678,12 @@
             "item_deleted": "Item deleted",
             "item_saved": "Item saved",
             "quantity_cannot_negative": "Quantity cannot be negative",
-            "sync_child_location": "Selected parent syncs its children's locations to its own. The location has been updated."
+            "sync_child_location": "Selected parent syncs its children's locations to its own. The location has been updated.",
+            "sync_price_failed": "Failed to sync market prices",
+            "sync_bulk_success": "Successfully synced market prices for {count, plural, =1 {1 item} other {# items}}"
         },
+        "sync_prices_selected": "Sync Market Prices (Selected)",
+        "sync_price_item": "Sync Market Price",
         "updated_at": "Updated At",
         "warranty": "Warranty",
         "warranty_details": "Warranty Details",
